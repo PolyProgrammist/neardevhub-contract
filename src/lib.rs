@@ -4,6 +4,7 @@ pub mod debug;
 pub mod migrations;
 mod notify;
 pub mod post;
+pub mod proposal;
 mod repost;
 mod social_db;
 pub mod stats;
@@ -14,6 +15,7 @@ use crate::access_control::members::Member;
 use crate::access_control::AccessControl;
 use community::*;
 use post::*;
+use proposal::*;
 
 use crate::social_db::social_db_contract;
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
@@ -46,6 +48,7 @@ pub struct Contract {
     pub label_to_posts: UnorderedMap<String, HashSet<PostId>>,
     pub access_control: AccessControl,
     pub authors: UnorderedMap<AccountId, HashSet<PostId>>,
+    pub proposals: Vector<VersionedProposal>,
     pub communities: UnorderedMap<CommunityHandle, Community>,
     pub featured_communities: Vec<FeaturedCommunity>,
     pub available_addons: UnorderedMap<AddOnId, AddOn>,
@@ -64,6 +67,7 @@ impl Contract {
             label_to_posts: UnorderedMap::new(StorageKey::LabelToPostsV2),
             access_control: AccessControl::default(),
             authors: UnorderedMap::new(StorageKey::AuthorToAuthorPosts),
+            proposals: Vector::new(StorageKey::Proposals),
             communities: UnorderedMap::new(StorageKey::Communities),
             featured_communities: Vec::new(),
             available_addons: UnorderedMap::new(StorageKey::AddOns),
@@ -195,6 +199,45 @@ impl Contract {
         } else {
             repost::repost(post);
         }
+        notify::notify_mentions(desc.as_str(), id);
+    }
+
+    #[payable]
+    pub fn add_proposal(&mut self, body: VersionedProposalBody, labels: HashSet<String>) {
+        near_sdk::log!("add_proposal");
+        let id = self.posts.len();
+        let author_id = env::predecessor_account_id();
+        let editor_id = author_id.clone();
+        require!(
+            self.is_allowed_to_use_labels(
+                Some(editor_id.clone()),
+                labels.iter().cloned().collect()
+            ),
+            "Cannot use these labels"
+        );
+
+        for label in &labels {
+            let mut other_posts = self.label_to_posts.get(label).unwrap_or_default();
+            other_posts.insert(id);
+            self.label_to_posts.insert(label, &other_posts);
+        }
+        let proposal = Proposal {
+            id,
+            author_id: author_id.clone(),
+            // likes: Default::default(),
+            snapshot: ProposalSnapshot { editor_id, timestamp: env::block_timestamp(), labels, body },
+            snapshot_history: vec![],
+        };
+        self.proposals.push(&proposal.clone().into());
+
+        let mut author_posts = self.authors.get(&author_id).unwrap_or_else(|| HashSet::new());
+        author_posts.insert(proposal.id);
+        self.authors.insert(&proposal.author_id, &author_posts);
+
+        let desc = get_proposal_description(proposal.clone());
+
+        
+        // repost::repost(post);
         notify::notify_mentions(desc.as_str(), id);
     }
 

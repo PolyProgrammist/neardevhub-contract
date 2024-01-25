@@ -56,6 +56,7 @@ pub enum StorageKey {
     LabelToPostsV2,
     AuthorToAuthorPosts,
     AuthorPosts(CryptoHash),
+    Proposals,
     Communities,
     AddOns,
 }
