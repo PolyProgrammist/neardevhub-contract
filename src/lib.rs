@@ -237,9 +237,9 @@ impl Contract {
         );
 
         for label in &labels {
-            let mut other_posts = self.label_to_posts.get(label).unwrap_or_default();
-            other_posts.insert(id);
-            self.label_to_posts.insert(label, &other_posts);
+            let mut other_proposals = self.label_to_proposals.get(label).unwrap_or_default();
+            other_proposals.insert(id);
+            self.label_to_proposals.insert(label, &other_proposals);
         }
         let proposal = Proposal {
             id,
@@ -250,9 +250,9 @@ impl Contract {
         };
         self.proposals.push(&proposal.clone().into());
 
-        let mut author_posts = self.authors.get(&author_id).unwrap_or_else(|| HashSet::new());
-        author_posts.insert(proposal.id);
-        self.authors.insert(&proposal.author_id, &author_posts);
+        let mut author_proposals = self.author_proposals.get(&author_id).unwrap_or_else(|| HashSet::new());
+        author_proposals.insert(proposal.id);
+        self.author_proposals.insert(&proposal.author_id, &author_proposals);
 
         let desc = get_proposal_description(proposal.clone());
 
@@ -289,14 +289,20 @@ impl Contract {
 
     pub fn get_all_labels(&self) -> Vec<String> {
         near_sdk::log!("get_all_labels");
-        let mut res: Vec<_> = self.label_to_posts.keys().collect();
+        let mut post_labels: HashSet<_> = self.label_to_posts.keys().collect::<HashSet<_>>();
+        let proposals_labels: HashSet<_> = self.label_to_proposals.keys().collect::<HashSet<_>>();
+        post_labels.extend(proposals_labels);
+        let mut res: Vec<_> = post_labels.into_iter().collect();
         res.sort();
         res
     }
 
     pub fn get_all_authors(&self) -> Vec<AccountId> {
         near_sdk::log!("get_all_authors");
-        let mut res: Vec<_> = self.authors.keys().collect();
+        let mut author_posts: HashSet<_> = self.authors.keys().collect::<HashSet<_>>();
+        let author_proposals: HashSet<_> = self.author_proposals.keys().collect::<HashSet<_>>();
+        author_posts.extend(author_proposals);
+        let mut res: Vec<_> = author_posts.into_iter().collect();
         res.sort();
         res
     }
@@ -337,15 +343,21 @@ impl Contract {
             .contains(&ActionType::UseLabels)
     }
 
-    pub fn get_all_allowed_labels(&self, editor: AccountId) -> Vec<String> {
-        near_sdk::log!("get_all_allowed_labels");
-        let mut res: Vec<_> = self
-            .label_to_posts
-            .keys()
+    fn filtered_labels<T>(&self, labels_to_t: &UnorderedMap<String, T>, editor: &AccountId) -> HashSet<String>
+    where T: near_sdk::borsh::BorshSerialize + near_sdk::borsh::BorshDeserialize, {
+        labels_to_t.keys()
             .filter(|label| {
                 self.is_allowed_to_use_labels(Some(editor.clone()), vec![label.clone()])
             })
-            .collect();
+            .collect()
+    }
+
+    pub fn get_all_allowed_labels(&self, editor: AccountId) -> Vec<String> {
+        near_sdk::log!("get_all_allowed_labels");
+        let mut post_labels = self.filtered_labels(&self.label_to_posts, &editor);
+        let proposals_labels = self.filtered_labels(&self.label_to_posts, &editor);
+        post_labels.extend(proposals_labels);
+        let mut res: Vec<_> = post_labels.into_iter().collect();
         res.sort();
         res
     }
