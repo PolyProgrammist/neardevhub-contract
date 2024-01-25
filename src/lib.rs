@@ -49,6 +49,8 @@ pub struct Contract {
     pub access_control: AccessControl,
     pub authors: UnorderedMap<AccountId, HashSet<PostId>>,
     pub proposals: Vector<VersionedProposal>,
+    pub label_to_proposals: UnorderedMap<String, HashSet<ProposalId>>,
+    pub author_proposals: UnorderedMap<AccountId, HashSet<ProposalId>>,
     pub communities: UnorderedMap<CommunityHandle, Community>,
     pub featured_communities: Vec<FeaturedCommunity>,
     pub available_addons: UnorderedMap<AddOnId, AddOn>,
@@ -68,6 +70,8 @@ impl Contract {
             access_control: AccessControl::default(),
             authors: UnorderedMap::new(StorageKey::AuthorToAuthorPosts),
             proposals: Vector::new(StorageKey::Proposals),
+            label_to_proposals: UnorderedMap::new(StorageKey::LabelToProposals),
+            author_proposals: UnorderedMap::new(StorageKey::AuthorProposals),
             communities: UnorderedMap::new(StorageKey::Communities),
             featured_communities: Vec::new(),
             available_addons: UnorderedMap::new(StorageKey::AddOns),
@@ -102,6 +106,7 @@ impl Contract {
     }
 
     pub fn get_all_post_ids(&self) -> Vec<PostId> {
+        near_sdk::log!("get_all_post_ids");
         (0..self.posts.len()).into_iter().collect()
     }
 
@@ -124,6 +129,21 @@ impl Contract {
         } else {
             Option::Some(res)
         }
+    }
+
+    pub fn get_proposals(&self) -> Vec<VersionedProposal> {
+        near_sdk::log!("get_proposals");
+        self.proposals.to_vec()
+    }
+
+    pub fn get_proposal(&self, proposal_id: ProposalId) -> VersionedProposal {
+        near_sdk::log!("get_proposal");
+        self.proposals.get(proposal_id).unwrap_or_else(|| panic!("Proposal id {} not found", proposal_id))
+    }
+
+    pub fn get_all_proposal_ids(&self) -> Vec<ProposalId> {
+        near_sdk::log!("get_all_proposal_ids");
+        (0..self.proposals.len()).into_iter().collect()
     }
 
     #[payable]
@@ -205,7 +225,7 @@ impl Contract {
     #[payable]
     pub fn add_proposal(&mut self, body: VersionedProposalBody, labels: HashSet<String>) {
         near_sdk::log!("add_proposal");
-        let id = self.posts.len();
+        let id = self.proposals.len();
         let author_id = env::predecessor_account_id();
         let editor_id = author_id.clone();
         require!(
@@ -242,6 +262,7 @@ impl Contract {
     }
 
     pub fn get_posts_by_author(&self, author: AccountId) -> Vec<PostId> {
+        near_sdk::log!("get_posts_by_author");
         self.authors.get(&author).map(|posts| posts.into_iter().collect()).unwrap_or(Vec::new())
     }
 
@@ -249,6 +270,19 @@ impl Contract {
         near_sdk::log!("get_posts_by_label");
         let mut res: Vec<_> =
             self.label_to_posts.get(&label).unwrap_or_default().into_iter().collect();
+        res.sort();
+        res
+    }
+
+    pub fn get_proposals_by_author(&self, author: AccountId) -> Vec<ProposalId> {
+        near_sdk::log!("get_proposals_by_author");
+        self.author_proposals.get(&author).map(|proposals| proposals.into_iter().collect()).unwrap_or(Vec::new())
+    }
+
+    pub fn get_proposals_by_label(&self, label: String) -> Vec<ProposalId> {
+        near_sdk::log!("get_proposals_by_label");
+        let mut res: Vec<_> =
+            self.label_to_proposals.get(&label).unwrap_or_default().into_iter().collect();
         res.sort();
         res
     }
