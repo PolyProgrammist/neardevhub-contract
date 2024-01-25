@@ -256,8 +256,7 @@ impl Contract {
 
         let desc = get_proposal_description(proposal.clone());
 
-        
-        // repost::repost(post);
+        repost::repost(proposal);
         notify::notify_mentions(desc.as_str(), id);
     }
 
