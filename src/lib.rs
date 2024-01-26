@@ -244,7 +244,7 @@ impl Contract {
         let proposal = Proposal {
             id,
             author_id: author_id.clone(),
-            // likes: Default::default(),
+            block_height: 0u64, // TODO
             snapshot: ProposalSnapshot { editor_id, timestamp: env::block_timestamp(), labels, body },
             snapshot_history: vec![],
         };
@@ -256,7 +256,7 @@ impl Contract {
 
         let desc = get_proposal_description(proposal.clone());
 
-        repost::repost(proposal);
+        proposal::repost::publish_to_socialdb_feed(proposal);
         notify::notify_mentions(desc.as_str(), id);
     }
 
@@ -459,6 +459,67 @@ impl Contract {
             .with_attached_deposit(CREATE_COMMUNITY_BALANCE)
             .create_community_account(new_community.handle);
     }
+
+    #[payable]
+    pub fn edit_proposal(&mut self, id: ProposalId, body: VersionedProposalBody, labels: HashSet<String>) { 
+        near_sdk::log!("edit_proposal");
+        require!(
+            self.is_allowed_to_edit(id, Option::None),
+            "The account is not allowed to edit this proposal"
+        );
+        let editor_id = env::predecessor_account_id();
+        let mut proposal: Proposal =
+            self.proposals.get(id).unwrap_or_else(|| panic!("Proposal id {} not found", id)).into();
+
+        let old_snapshot = proposal.snapshot.clone();
+        let old_labels_set = old_snapshot.labels.clone();
+        let new_labels = labels;
+        let new_snapshot = ProposalSnapshot {
+            editor_id: editor_id.clone(),
+            timestamp: env::block_timestamp(),
+            labels: new_labels.clone(),
+            body,
+        };
+        proposal.snapshot = new_snapshot;
+        proposal.snapshot_history.push(old_snapshot);
+        let proposal_author = proposal.author_id.clone();
+        self.proposals.replace(id, &proposal.into());
+
+        // Update labels index.
+
+        let new_labels_set = new_labels;
+        let labels_to_remove = &old_labels_set - &new_labels_set;
+        let labels_to_add = &new_labels_set - &old_labels_set;
+        require!(
+            self.is_allowed_to_use_labels(
+                Some(editor_id.clone()),
+                labels_to_remove.iter().cloned().collect()
+            ),
+            "Not allowed to remove these labels"
+        );
+        require!(
+            self.is_allowed_to_use_labels(
+                Some(editor_id.clone()),
+                labels_to_add.iter().cloned().collect()
+            ),
+            "Not allowed to add these labels"
+        );
+
+        for label_to_remove in labels_to_remove {
+            let mut proposals = self.label_to_proposals.get(&label_to_remove).unwrap();
+            proposals.remove(&id);
+            self.label_to_proposals.insert(&label_to_remove, &proposals);
+        }
+
+        for label_to_add in labels_to_add {
+            let mut proposals = self.label_to_proposals.get(&label_to_add).unwrap_or_default();
+            proposals.insert(id);
+            self.label_to_proposals.insert(&label_to_add, &proposals);
+        }
+
+        notify::notify_edit(id, proposal_author);
+    }
+
 
     pub fn get_community(&self, handle: CommunityHandle) -> Option<Community> {
         self.communities.get(&handle)

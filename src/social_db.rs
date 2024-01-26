@@ -3,7 +3,7 @@ use near_sdk::serde_json::Value;
 
 #[ext_contract(ext_social_db)]
 pub trait SocialDB {
-    fn set(&mut self, data: Value);
+    fn set(&mut self, data: Value) -> Value;
 }
 
 pub fn social_db_contract() -> ext_social_db::SocialDBExt {

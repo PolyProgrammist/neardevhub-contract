@@ -1,96 +1,56 @@
 use crate::post::{get_post_description, Post, PostBody};
 use crate::social_db::social_db_contract;
-use crate::{get_proposal_description, Proposal};
 use near_sdk::serde_json::json;
 use near_sdk::{env, AccountId, Promise};
 
-pub trait RepostInternal {
-    fn repost_internal(&self, contract_address: AccountId) -> near_sdk::serde_json::Value;
+fn repost_internal(post: Post, contract_address: AccountId) -> near_sdk::serde_json::Value {
+    let post_link = format!("/devgovgigs.near/widget/Post?id={}", post.id);
+    let title = match post.snapshot.body.clone() {
+        PostBody::Idea(idea) => format!("## Idea: {}\n", idea.latest_version().name),
+        PostBody::Solution(solution) => {
+            format!("## Solution: {}\n", solution.latest_version().name)
+        }
+        PostBody::Attestation(attestation) => {
+            format!("## Attestation: {}\n", attestation.latest_version().name)
+        }
+        PostBody::Sponsorship(sponsorship) => {
+            format!("## Sponsorship: {}\n", sponsorship.latest_version().name)
+        }
+        _ => Default::default(),
+    };
+
+    let desc = get_post_description(post.clone());
+
+    let text = format!(
+        "@{author} [Posted on DevHub]({post_link})\n{title}{desc}",
+        author = post.author_id,
+        post_link = post_link,
+        title = title,
+        desc = desc
+    );
+
+    let main_value = json!({
+        "type": "md",
+        "text": text
+    });
+
+    json!({
+        contract_address: {
+            "post": {
+                "main": main_value.to_string(),
+            },
+            "index": {
+                "post": "{\"key\":\"main\",\"value\":{\"type\":\"md\"}}",
+            }
+        }
+    })
 }
 
-impl RepostInternal for Post {
-    fn repost_internal(&self, contract_address: AccountId) -> near_sdk::serde_json::Value {
-        let post_link = format!("/devgovgigs.near/widget/Post?id={}", self.id);
-        let title = match self.snapshot.body.clone() {
-            PostBody::Idea(idea) => format!("## Idea: {}\n", idea.latest_version().name),
-            PostBody::Solution(solution) => {
-                format!("## Solution: {}\n", solution.latest_version().name)
-            }
-            PostBody::Attestation(attestation) => {
-                format!("## Attestation: {}\n", attestation.latest_version().name)
-            }
-            PostBody::Sponsorship(sponsorship) => {
-                format!("## Sponsorship: {}\n", sponsorship.latest_version().name)
-            }
-            _ => Default::default(),
-        };
-    
-        let desc = get_post_description(self.clone());
-    
-        let text = format!(
-            "@{author} [Posted on DevHub]({post_link})\n{title}{desc}",
-            author = self.author_id,
-            post_link = post_link,
-            title = title,
-            desc = desc
-        );
-    
-        let main_value = json!({
-            "type": "md",
-            "text": text
-        });
-    
-        json!({
-            contract_address: {
-                "post": {
-                    "main": main_value.to_string(),
-                },
-                "index": {
-                    "post": "{\"key\":\"main\",\"value\":{\"type\":\"md\"}}",
-                }
-            }
-        })
-    }
-}
-
-impl RepostInternal for Proposal {
-    fn repost_internal(&self, contract_address: AccountId) -> near_sdk::serde_json::Value {
-        let post_link = format!("/devgovgigs.near/widget/Proposal?id={}", self.id);
-        let title = self.snapshot.body.clone().latest_version().name;
-    
-        let desc = get_proposal_description(self.clone());
-    
-        let text = format!(
-            "@{author} [Posted on DevHub]({post_link})\n{title}{desc}",
-            author = self.author_id,
-            post_link = post_link,
-            title = title,
-            desc = desc
-        );
-    
-        let main_value = json!({
-            "type": "md",
-            "text": text
-        });
-    
-        json!({
-            contract_address: {
-                "post": {
-                    "main": main_value.to_string(),
-                },
-                "index": {
-                    "post": "{\"key\":\"main\",\"value\":{\"type\":\"md\"}}",
-                }
-            }
-        })
-    }
-}
-
-pub fn repost<T: RepostInternal>(post: T) -> Promise {
+pub fn repost(post: Post) -> Promise {
     social_db_contract()
         .with_static_gas(env::prepaid_gas().saturating_div(3))
         .with_attached_deposit(env::attached_deposit())
-        .set(post.repost_internal(env::current_account_id()))
+        .set(repost_internal(post, env::current_account_id()))
 }
 
 #[cfg(test)]
@@ -98,8 +58,8 @@ mod tests {
     use std::convert::TryInto;
 
     use crate::post::{IdeaV1, Post, PostBody, PostSnapshot, VersionedIdea};
+    use crate::repost::repost_internal;
     use near_sdk::serde_json::json;
-    use crate::repost::RepostInternal;
 
     #[test]
     pub fn check_formatting() {
@@ -116,7 +76,7 @@ mod tests {
             snapshot_history: vec![],
         };
 
-        let call_args = post.repost_internal("devgovgigs.near".parse().unwrap());
+        let call_args = repost_internal(post, "devgovgigs.near".parse().unwrap());
         let expected = json!({
             "devgovgigs.near": {
                 "post": {
