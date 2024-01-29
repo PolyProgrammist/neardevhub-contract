@@ -14,6 +14,7 @@ use crate::access_control::members::ActionType;
 use crate::access_control::members::Member;
 use crate::access_control::AccessControl;
 use community::*;
+use near_sdk::PromiseResult;
 use post::*;
 use proposal::*;
 
@@ -241,23 +242,52 @@ impl Contract {
             other_proposals.insert(id);
             self.label_to_proposals.insert(label, &other_proposals);
         }
+
+        let mut author_proposals = self.author_proposals.get(&author_id).unwrap_or_else(|| HashSet::new());
+        author_proposals.insert(id);
+        self.author_proposals.insert(&author_id, &author_proposals);
+
         let proposal = Proposal {
             id,
             author_id: author_id.clone(),
             block_height: 0u64, // TODO
-            snapshot: ProposalSnapshot { editor_id, timestamp: env::block_timestamp(), labels, body },
+            snapshot: ProposalSnapshot { editor_id, timestamp: env::block_timestamp(), labels, body: body.clone() },
             snapshot_history: vec![],
         };
-        self.proposals.push(&proposal.clone().into());
 
-        let mut author_proposals = self.author_proposals.get(&author_id).unwrap_or_else(|| HashSet::new());
-        author_proposals.insert(proposal.id);
-        self.author_proposals.insert(&proposal.author_id, &author_proposals);
+        proposal::repost::publish_to_socialdb_feed(
+            Self::ext(env::current_account_id())
+            .with_static_gas(env::prepaid_gas().saturating_div(3))
+            .set_block_height_callback(proposal.clone()), proposal.clone());
 
-        let desc = get_proposal_description(proposal.clone());
+        let desc = get_proposal_description(body);
 
-        proposal::repost::publish_to_socialdb_feed(proposal);
         notify::notify_mentions(desc.as_str(), id);
+    }
+
+
+    #[private]
+    pub fn set_block_height_callback(&mut self, old_proposal: Proposal) -> u64 {
+        assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
+        match env::promise_result(0) {
+            PromiseResult::Successful(val) => {
+                if let Ok(set_result) = near_sdk::serde_json::from_slice::<Value>(&val) {
+                    let block_height: u64 = set_result["block_height"].as_str().unwrap().parse::<u64>().unwrap();
+                    let proposal = Proposal {
+                        id: old_proposal.id,
+                        author_id: old_proposal.author_id.clone(),
+                        block_height: block_height,
+                        snapshot: old_proposal.snapshot,
+                        snapshot_history: old_proposal.snapshot_history,
+                    };
+                    self.proposals.push(&proposal.clone().into());
+                    block_height
+                } else {
+                    env::panic_str("ERR_WRONG_VAL_RECEIVED")
+                }
+            },
+            _ => env::panic_str("ERR_CALL_FAILED"),
+        }
     }
 
     pub fn get_posts_by_author(&self, author: AccountId) -> Vec<PostId> {
