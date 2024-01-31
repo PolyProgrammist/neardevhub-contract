@@ -50,7 +50,7 @@ async fn test_add_proposal() -> anyhow::Result<()> {
     assert_eq!(get_proposal["snapshot"]["category"], "cat");
 
     let block_height: u64 = get_proposal["block_height"].as_str().unwrap().parse::<u64>()?;
-    assert!(block_height == 0);
+    assert!(block_height > 0);
 
     Ok(())
 }

@@ -197,97 +197,93 @@ async fn test_deploy_contract_self_upgrade() -> anyhow::Result<()> {
             contract.call("unsafe_migrate").args_json(json!({})).max_gas().transact().await?;
     }
 
-    // let x = contract
-    // .call("get_post")
-    // .args_json(json!({
-    //     "post_id" : 0
-    // })).view().await?;
+    let get_idea_post: serde_json::Value = contract
+        .call("get_post")
+        .args_json(json!({
+            "post_id" : 0
+        }))
+        .view()
+        .await?
+        .json()?;
 
-    // let get_idea_post: serde_json::Value = x
-    //     .view()
-    //     .await?
-    //     .json()?;
+    insta::assert_json_snapshot!(get_idea_post, {".snapshot.timestamp" => "[timestamp]"});
 
-    // insta::assert_json_snapshot!(get_idea_post, {".snapshot.timestamp" => "[timestamp]"});
+    let get_solution_v2_post: serde_json::Value = contract
+        .call("get_post")
+        .args_json(json!({
+            "post_id" : 1
+        }))
+        .view()
+        .await?
+        .json()?;
 
-    // let x = contract
-    // .call("get_post")
-    // .args_json(json!({
-    //     "post_id" : 1
-    // }));
+    insta::assert_json_snapshot!(get_solution_v2_post, {".snapshot.timestamp" => "[timestamp]"});
 
-    // let get_solution_v2_post: serde_json::Value = x
-    //     .view()
-    //     .await?
-    //     .json()?;
+    let get_comment_posts: serde_json::Value = contract
+        .call("get_posts")
+        .args_json(json!({
+            "parent_id" : 0
+        }))
+        .view()
+        .await?
+        .json()?;
 
-    // insta::assert_json_snapshot!(get_solution_v2_post, {".snapshot.timestamp" => "[timestamp]"});
+    insta::assert_json_snapshot!(get_comment_posts, {"[].snapshot.timestamp" => "[timestamp]"});
 
-    // let get_comment_posts: serde_json::Value = contract
-    //     .call("get_posts")
-    //     .args_json(json!({
-    //         "parent_id" : 0
-    //     }))
-    //     .view()
-    //     .await?
-    //     .json()?;
+    let get_attestation_sponsorship_posts: serde_json::Value = contract
+        .call("get_posts")
+        .args_json(json!({
+            "parent_id" : 1
+        }))
+        .view()
+        .await?
+        .json()?;
 
-    // insta::assert_json_snapshot!(get_comment_posts, {"[].snapshot.timestamp" => "[timestamp]"});
+    insta::assert_json_snapshot!(get_attestation_sponsorship_posts, {"[].snapshot.timestamp" => "[timestamp]"});
 
-    // let get_attestation_sponsorship_posts: serde_json::Value = contract
-    //     .call("get_posts")
-    //     .args_json(json!({
-    //         "parent_id" : 1
-    //     }))
-    //     .view()
-    //     .await?
-    //     .json()?;
+    let get_sponsorship_post_with_near: serde_json::Value = contract
+        .call("get_post")
+        .args_json(json!({
+            "post_id" : 4
+        }))
+        .view()
+        .await?
+        .json()?;
 
-    // insta::assert_json_snapshot!(get_attestation_sponsorship_posts, {"[].snapshot.timestamp" => "[timestamp]"});
+    insta::assert_json_snapshot!(get_sponsorship_post_with_near, {".snapshot.timestamp" => "[timestamp]"});
 
-    // let get_sponsorship_post_with_near: serde_json::Value = contract
-    //     .call("get_post")
-    //     .args_json(json!({
-    //         "post_id" : 4
-    //     }))
-    //     .view()
-    //     .await?
-    //     .json()?;
+    let get_sponsorship_post_with_usd: serde_json::Value = contract
+        .call("get_post")
+        .args_json(json!({
+            "post_id" : 5
+        }))
+        .view()
+        .await?
+        .json()?;
 
-    // insta::assert_json_snapshot!(get_sponsorship_post_with_near, {".snapshot.timestamp" => "[timestamp]"});
+    insta::assert_json_snapshot!(get_sponsorship_post_with_usd, {".snapshot.timestamp" => "[timestamp]"});
 
-    // let get_sponsorship_post_with_usd: serde_json::Value = contract
-    //     .call("get_post")
-    //     .args_json(json!({
-    //         "post_id" : 5
-    //     }))
-    //     .view()
-    //     .await?
-    //     .json()?;
+    let get_sponsorship_post_with_nep141: serde_json::Value = contract
+        .call("get_post")
+        .args_json(json!({
+            "post_id" : 6
+        }))
+        .view()
+        .await?
+        .json()?;
 
-    // insta::assert_json_snapshot!(get_sponsorship_post_with_usd, {".snapshot.timestamp" => "[timestamp]"});
+    insta::assert_json_snapshot!(get_sponsorship_post_with_nep141, {".snapshot.timestamp" => "[timestamp]"});
 
-    // let get_sponsorship_post_with_nep141: serde_json::Value = contract
-    //     .call("get_post")
-    //     .args_json(json!({
-    //         "post_id" : 6
-    //     }))
-    //     .view()
-    //     .await?
-    //     .json()?;
+    let get_community: serde_json::Value = contract
+        .call("get_community")
+        .args_json(json!({
+            "handle" : "gotham"
+        }))
+        .view()
+        .await?
+        .json()?;
 
-    // insta::assert_json_snapshot!(get_sponsorship_post_with_nep141, {".snapshot.timestamp" => "[timestamp]"});
-
-    // let get_community: serde_json::Value = contract
-    //     .call("get_community")
-    //     .args_json(json!({
-    //         "handle" : "gotham"
-    //     }))
-    //     .view()
-    //     .await?
-    //     .json()?;
-
-    // insta::assert_json_snapshot!(get_community);
+    insta::assert_json_snapshot!(get_community);
 
     Ok(())
 }
