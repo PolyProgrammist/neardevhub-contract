@@ -848,41 +848,37 @@ mod tests {
         let receipts = get_created_receipts();
         println!("{:?}", receipts);
         assert_eq!(3, receipts.len());
-        let receipt = receipts.get(1).unwrap();
+        let receipt = receipts.get(2).unwrap();
         let receipt_str = format!("{:?}", receipt);
         let re = Regex::new(r#"method_name: (\[[^\]]*\]), args: (\[[^\]]*\])"#).unwrap();
 
         // Extract the method_name and args values
-        // for cap in re.captures_iter(&receipt_str) {
-        //     let method_name = &cap[1];
+        for cap in re.captures_iter(&receipt_str) {
+            let method_name = &cap[1];
 
-        //     let args = &cap[2];
+            let args = &cap[2];
 
-        //     let method_name = method_name
-        //         .trim_start_matches('[')
-        //         .trim_end_matches(']')
-        //         .split(", ")
-        //         .map(|s| s.parse().unwrap())
-        //         .collect::<Vec<u8>>();
-        //     let method_name =
-        //         String::from_utf8(method_name).expect("Failed to convert method_name to String");
+            let method_name = method_name
+                .trim_start_matches('[')
+                .trim_end_matches(']')
+                .split(", ")
+                .map(|s| s.parse().unwrap())
+                .collect::<Vec<u8>>();
+            let method_name =
+                String::from_utf8(method_name).expect("Failed to convert method_name to String");
 
-        //     assert_eq!("set", method_name);
+            assert_eq!("set", method_name);
 
-        //     let args = args
-        //         .trim_start_matches('[')
-        //         .trim_end_matches(']')
-        //         .split(", ")
-        //         .map(|s| s.parse().unwrap())
-        //         .collect::<Vec<u8>>();
-        //     let args = String::from_utf8(args).expect("Failed to convert args to String");
+            let args = args
+                .trim_start_matches('[')
+                .trim_end_matches(']')
+                .split(", ")
+                .map(|s| s.parse().unwrap())
+                .collect::<Vec<u8>>();
+            let args = String::from_utf8(args).expect("Failed to convert args to String");
 
-        //     assert_eq!("{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}}]\"}}}}", args);
-        // }
-
-        // let get_comment_posts: Proposal = contract.get_proposal(1).into();
-        // assert_eq!(get_comment_posts.snapshot.body.clone().latest_version().requested_sponsorship_amount, 500);
-        // assert_eq!(get_comment_posts.snapshot.body.clone().latest_version().category, "cat");
+            assert_eq!("{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}}]\"}}}}", args);
+        }
     }
 
     #[test]
