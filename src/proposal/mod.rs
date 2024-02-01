@@ -67,11 +67,11 @@ pub struct ProposalSnapshot {
 
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
-#[serde(tag = "proposal_link_version")]
+#[serde(tag = "link_type")]
 #[borsh(crate = "near_sdk::borsh")]
 pub enum ProposalLink {
-    ProposalId(ProposalId),
-    PostId(PostId)
+    ProposalId{id: ProposalId},
+    PostId{id: PostId}
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
@@ -88,7 +88,7 @@ pub struct ProposalBodyV0 {
     pub requested_sponsorship_token: Option<SponsorshipToken>,
     pub receiver_account: AccountId,
     pub requested_sponsor: Option<AccountId>,
-    pub supervisor: AccountId,
+    pub supervisor: Option<AccountId>,
     pub payouts: Vec<CryptoHash>,
     pub timeline_status: TimelineStatus,
 }
@@ -126,7 +126,9 @@ pub fn get_subscribers(proposal: Proposal) -> Vec<String> {
         get_text_mentions(proposal_body.description.as_str()), 
         get_text_mentions(proposal_body.summary.as_str())
     ].concat();
-    result.push(proposal_body.supervisor.to_string());
+    if let Some(supervisor) = proposal_body.supervisor {
+        result.push(supervisor.to_string());
+    }
     if let Some(sponsor) = proposal_body.requested_sponsor {
         result.push(sponsor.to_string());
     }

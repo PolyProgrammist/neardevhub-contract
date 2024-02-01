@@ -340,6 +340,26 @@ impl Contract {
         res
     }
 
+    pub fn is_allowed_to_edit_proposal(&self, proposal_id: ProposalId, editor: Option<AccountId>) -> bool {
+        near_sdk::log!("is_allowed_to_edit");
+        let proposal: Proposal = self
+            .proposals
+            .get(proposal_id)
+            .unwrap_or_else(|| panic!("Proposal id {} not found", proposal_id))
+            .into();
+        let editor = editor.unwrap_or_else(env::predecessor_account_id);
+        // First check for simple cases.
+        if editor == env::current_account_id() || editor == proposal.author_id {
+            return true;
+        }
+
+        // Then check for complex case.
+        self.access_control
+            .members_list
+            .check_permissions(editor, proposal.snapshot.labels.into_iter().collect::<Vec<_>>())
+            .contains(&ActionType::EditPost)
+    }
+
     pub fn is_allowed_to_edit(&self, post_id: PostId, editor: Option<AccountId>) -> bool {
         near_sdk::log!("is_allowed_to_edit");
         let post: Post = self
@@ -501,7 +521,7 @@ impl Contract {
     pub fn edit_proposal(&mut self, id: ProposalId, body: VersionedProposalBody, labels: HashSet<String>) { 
         near_sdk::log!("edit_proposal");
         require!(
-            self.is_allowed_to_edit(id, Option::None),
+            self.is_allowed_to_edit_proposal(id, Option::None),
             "The account is not allowed to edit this proposal"
         );
         let editor_id = env::predecessor_account_id();
@@ -846,15 +866,15 @@ mod tests {
         {
             "name": "another post",
             "description": "Hello to @petersalomonsen.near and @psalomo.near. This is an idea with mentions.",
-            "post_type": "Idea",
-            "idea_version": "V1",
             "category": "cat",
             "summary": "sum",
-            "linked_proposals": [],
-            "requested_sponsorship_amount": "500",
+            "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+            "requested_sponsorship_amount": "1000000000",
+            "requested_sponsorship_token": "USD",
             "receiver_account": "polyprogrammist.near",
             "supervisor": "frol.near",
-            "payouts": [],
+            "sponsor": "neardevdao.near",
+            "payouts": [[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]],
             "timeline_status": {"timeline_status": "DRAFT"}
         }"#).unwrap();
         contract.add_proposal(VersionedProposalBody::V0(body), HashSet::new());
