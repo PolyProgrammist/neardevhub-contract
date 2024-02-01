@@ -2,7 +2,7 @@ use near_sdk::borsh::{BorshSerialize, BorshDeserialize};
 use near_sdk::serde::{Serialize, Deserialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
-#[serde(crate = "near_sdk::serde")]
+#[serde(crate = "near_sdk::serde", tag = "timeline_status", rename_all = "SCREAMING_SNAKE_CASE")]
 #[borsh(crate = "near_sdk::borsh")]
 pub enum TimelineStatus {
     Draft,

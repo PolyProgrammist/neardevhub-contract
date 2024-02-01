@@ -27,7 +27,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
                 "payouts": [],
-                "timeline_status": "Draft",
+                "timeline_status": {"timeline_status": "DRAFT"},
                 "proposal_body_version": "V0"
             },
             "labels": [],

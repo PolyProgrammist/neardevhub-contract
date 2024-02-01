@@ -14,6 +14,8 @@ use crate::access_control::members::ActionType;
 use crate::access_control::members::Member;
 use crate::access_control::AccessControl;
 use community::*;
+use near_sdk::serde::Deserialize;
+use near_sdk::serde::Serialize;
 use near_sdk::PromiseResult;
 use post::*;
 use proposal::*;
@@ -268,21 +270,14 @@ impl Contract {
 
 
     #[private]
-    pub fn set_block_height_callback(&mut self, old_proposal: Proposal) -> u64 {
+    pub fn set_block_height_callback(&mut self, #[allow(unused_mut)] mut proposal: Proposal) -> BlockHeightCallbackRetValue {
         assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
         match env::promise_result(0) {
             PromiseResult::Successful(val) => {
                 if let Ok(set_result) = near_sdk::serde_json::from_slice::<Value>(&val) {
-                    let social_db_post_block_height: u64 = set_result["block_height"].as_str().unwrap().parse::<u64>().unwrap();
-                    let proposal = Proposal {
-                        id: old_proposal.id,
-                        author_id: old_proposal.author_id.clone(),
-                        social_db_post_block_height: social_db_post_block_height,
-                        snapshot: old_proposal.snapshot,
-                        snapshot_history: old_proposal.snapshot_history,
-                    };
+                    proposal.social_db_post_block_height = set_result["block_height"].as_str().unwrap().parse::<u64>().unwrap();
                     self.proposals.push(&proposal.clone().into());
-                    social_db_post_block_height
+                    BlockHeightCallbackRetValue{ proposal_id: near_sdk::json_types::U64(proposal.id) }
                 } else {
                     env::panic_str("ERR_WRONG_VAL_RECEIVED")
                 }
@@ -792,6 +787,12 @@ impl Contract {
     }
 }
 
+#[derive(Copy, Clone, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct BlockHeightCallbackRetValue {
+    proposal_id: near_sdk::json_types::U64,    
+}
+
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use std::collections::{HashMap, HashSet};
@@ -854,42 +855,18 @@ mod tests {
             "receiver_account": "polyprogrammist.near",
             "supervisor": "frol.near",
             "payouts": [],
-            "timeline_status": "Draft"
+            "timeline_status": {"timeline_status": "DRAFT"}
         }"#).unwrap();
         contract.add_proposal(VersionedProposalBody::V0(body), HashSet::new());
         let receipts = get_created_receipts();
         println!("{:?}", receipts);
         assert_eq!(3, receipts.len());
-        let receipt = receipts.get(2).unwrap();
-        let receipt_str = format!("{:?}", receipt);
-        let re = Regex::new(r#"method_name: (\[[^\]]*\]), args: (\[[^\]]*\])"#).unwrap();
 
-        // Extract the method_name and args values
-        for cap in re.captures_iter(&receipt_str) {
-            let method_name = &cap[1];
-
-            let args = &cap[2];
-
-            let method_name = method_name
-                .trim_start_matches('[')
-                .trim_end_matches(']')
-                .split(", ")
-                .map(|s| s.parse().unwrap())
-                .collect::<Vec<u8>>();
-            let method_name =
-                String::from_utf8(method_name).expect("Failed to convert method_name to String");
-
-            assert_eq!("set", method_name);
-
-            let args = args
-                .trim_start_matches('[')
-                .trim_end_matches(']')
-                .split(", ")
-                .map(|s| s.parse().unwrap())
-                .collect::<Vec<u8>>();
-            let args = String::from_utf8(args).expect("Failed to convert args to String");
-
-            assert_eq!("{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}}]\"}}}}", args);
+        if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, receipt_index, attached_deposit, prepaid_gas, gas_weight } = &receipts[2].actions[0] {
+            assert_eq!(method_name, b"set");
+            assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}}]\"}}}}");
+        } else {
+            assert!(false, "Expected a function call ...")
         }
     }
 
@@ -909,36 +886,13 @@ mod tests {
         contract.add_post(None, body, HashSet::new());
         let receipts = get_created_receipts();
         assert_eq!(2, receipts.len());
-        let receipt = receipts.get(1).unwrap();
-        let receipt_str = format!("{:?}", receipt);
-        let re = Regex::new(r#"method_name: (\[[^\]]*\]), args: (\[[^\]]*\])"#).unwrap();
 
         // Extract the method_name and args values
-        for cap in re.captures_iter(&receipt_str) {
-            let method_name = &cap[1];
-
-            let args = &cap[2];
-
-            let method_name = method_name
-                .trim_start_matches('[')
-                .trim_end_matches(']')
-                .split(", ")
-                .map(|s| s.parse().unwrap())
-                .collect::<Vec<u8>>();
-            let method_name =
-                String::from_utf8(method_name).expect("Failed to convert method_name to String");
-
-            assert_eq!("set", method_name);
-
-            let args = args
-                .trim_start_matches('[')
-                .trim_end_matches(']')
-                .split(", ")
-                .map(|s| s.parse().unwrap())
-                .collect::<Vec<u8>>();
-            let args = String::from_utf8(args).expect("Failed to convert args to String");
-
-            assert_eq!("{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}}]\"}}}}", args);
+        if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, receipt_index, attached_deposit, prepaid_gas, gas_weight } = &receipts[1].actions[0] {
+            assert_eq!(method_name, b"set");
+            assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}}]\"}}}}");
+        } else {
+            assert!(false, "Expected a function call ...")
         }
     }
 
