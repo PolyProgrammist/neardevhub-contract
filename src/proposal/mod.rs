@@ -32,7 +32,7 @@ pub struct Proposal {
     pub id: ProposalId,
     pub author_id: AccountId,
     #[serde(with = "u64_dec_format")]
-    pub block_height: BlockHeight,
+    pub social_db_post_block_height: BlockHeight,
     pub snapshot: ProposalSnapshot,
     // // Excludes the current snapshot itself.
     pub snapshot_history: Vec<ProposalSnapshot>,
