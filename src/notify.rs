@@ -133,36 +133,11 @@ mod tests {
         let receipts = get_created_receipts();
         assert_eq!(1, receipts.len());
 
-        let receipt = receipts.get(0).unwrap();
-        let receipt_str = format!("{:?}", receipt);
-        let re = Regex::new(r#"method_name: (\[[^\]]*\]), args: (\[[^\]]*\])"#).unwrap();
-
-        // Extract the method_name and args values
-        for cap in re.captures_iter(&receipt_str) {
-            let method_name = &cap[1];
-
-            let args = &cap[2];
-
-            let method_name = method_name
-                .trim_start_matches('[')
-                .trim_end_matches(']')
-                .split(", ")
-                .map(|s| s.parse().unwrap())
-                .collect::<Vec<u8>>();
-            let method_name =
-                String::from_utf8(method_name).expect("Failed to convert method_name to String");
-
-            assert_eq!("set", method_name);
-
-            let args = args
-                .trim_start_matches('[')
-                .trim_end_matches(']')
-                .split(", ")
-                .map(|s| s.parse().unwrap())
-                .collect::<Vec<u8>>();
-            let args = String::from_utf8(args).expect("Failed to convert args to String");
-
-            assert_eq!("{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"a.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":2}},{\\\"key\\\":\\\"bcdefg.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":2}}]\"}}}}", args);
+        if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, receipt_index, attached_deposit, prepaid_gas, gas_weight } = &receipts[0].actions[0] {
+            assert_eq!(method_name, b"set");
+            assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"a.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":2}},{\\\"key\\\":\\\"bcdefg.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":2}}]\"}}}}");
+        } else {
+            assert!(false, "Expected a function call ...")
         }
     }
 
