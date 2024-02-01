@@ -265,7 +265,7 @@ impl Contract {
 
         let desc = get_proposal_description(body);
 
-        notify::notify_mentions(desc.as_str(), id);
+        notify::notify_proposal_subscribers(proposal.clone());
     }
 
 
@@ -859,12 +859,12 @@ mod tests {
         }"#).unwrap();
         contract.add_proposal(VersionedProposalBody::V0(body), HashSet::new());
         let receipts = get_created_receipts();
-        println!("{:?}", receipts);
         assert_eq!(3, receipts.len());
 
         if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, receipt_index, attached_deposit, prepaid_gas, gas_weight } = &receipts[2].actions[0] {
             assert_eq!(method_name, b"set");
-            assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}}]\"}}}}");
+            println!("{:?}", args);
+            assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/proposal_mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/proposal_mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"frol.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/proposal_mention\\\",\\\"proposal\\\":0}}]\"}}}}");
         } else {
             assert!(false, "Expected a function call ...")
         }

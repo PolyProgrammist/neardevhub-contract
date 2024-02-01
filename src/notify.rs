@@ -1,9 +1,9 @@
 use crate::social_db::social_db_contract;
-use crate::PostId;
+use crate::{get_subscribers, PostId, Proposal, ProposalId};
 use near_sdk::serde_json::json;
 use near_sdk::{env, AccountId, Promise};
 
-pub fn notify_mentions(text: &str, post_id: PostId) {
+pub fn get_text_mentions(text: &str) -> Vec<String> {
     let mut mentions = Vec::new();
     let mut mention = String::new();
     let mut recording = false;
@@ -31,16 +31,17 @@ pub fn notify_mentions(text: &str, post_id: PostId) {
         mentions.push(mention);
     }
 
-    if mentions.len() > 0 {
+    mentions
+}
+
+pub fn notify_accounts(accounts: Vec<String>, notify_value: serde_json::Value) {
+    if accounts.len() > 0 {
         let mut notify_values = Vec::new();
 
-        for mention in mentions {
+        for account in accounts {
             notify_values.push(json!({
-                "key": mention,
-                "value": {
-                    "type": "devgovgigs/mention",
-                    "post": post_id,
-                }
+                "key": account,
+                "value": notify_value,
             }));
         }
 
@@ -54,6 +55,24 @@ pub fn notify_mentions(text: &str, post_id: PostId) {
                 } }
             }));
     }
+}
+
+pub fn notify_proposal_subscribers(proposal: Proposal) {
+    let accounts = get_subscribers(proposal.clone());
+
+    notify_accounts(accounts, json!({
+        "type": "devgovgigs/proposal_mention",
+        "proposal": proposal.id,
+    }))
+}
+
+pub fn notify_mentions(text: &str, post_id: PostId) {
+    let mentions = get_text_mentions(text);
+
+    notify_accounts(mentions, json!({
+        "type": "devgovgigs/mention",
+        "post": post_id,
+    }))
 }
 
 pub fn notify_like(post_id: PostId, post_author: AccountId) -> Promise {

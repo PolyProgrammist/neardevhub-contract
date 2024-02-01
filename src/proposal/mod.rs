@@ -3,6 +3,7 @@ pub mod timeline;
 
 use std::collections::HashSet;
 
+use crate::notify::get_text_mentions;
 use crate::post::PostId;
 use crate::str_serializers::*;
 use crate::{Balance, SponsorshipToken};
@@ -117,4 +118,17 @@ impl VersionedProposalBody {
 
 pub fn get_proposal_description(proposal_body: VersionedProposalBody) -> String {
     return proposal_body.clone().latest_version().description;
+}
+
+pub fn get_subscribers(proposal: Proposal) -> Vec<String> {
+    let proposal_body = proposal.snapshot.body.latest_version();
+    let mut result = [
+        get_text_mentions(proposal_body.description.as_str()), 
+        get_text_mentions(proposal_body.summary.as_str())
+    ].concat();
+    result.push(proposal_body.supervisor.to_string());
+    if let Some(sponsor) = proposal_body.requested_sponsor {
+        result.push(sponsor.to_string());
+    }
+    result
 }
