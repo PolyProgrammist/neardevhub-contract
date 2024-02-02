@@ -10,7 +10,7 @@ pub struct SetReturnType {
 
 #[ext_contract(ext_social_db)]
 pub trait SocialDB {
-    fn set(&mut self, data: Value) -> Value;
+    fn set(&mut self, data: Value) -> SetReturnType;
 }
 
 pub fn social_db_contract() -> ext_social_db::SocialDBExt {

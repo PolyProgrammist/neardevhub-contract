@@ -16,7 +16,6 @@ use crate::access_control::AccessControl;
 use community::*;
 use near_sdk::serde::Deserialize;
 use near_sdk::serde::Serialize;
-use near_sdk::PromiseResult;
 use post::*;
 use proposal::*;
 use crate::social_db::SetReturnType;
@@ -270,20 +269,10 @@ impl Contract {
 
 
     #[private]
-    pub fn set_block_height_callback(&mut self, #[allow(unused_mut)] mut proposal: Proposal) -> BlockHeightCallbackRetValue {
-        assert_eq!(env::promise_results_count(), 1, "ERR_TOO_MANY_RESULTS");
-        match env::promise_result(0) {
-            PromiseResult::Successful(val) => {
-                if let Ok(set_result) = near_sdk::serde_json::from_slice::<Value>(&val) {
-                    proposal.social_db_post_block_height = set_result["block_height"].as_str().unwrap().parse::<u64>().unwrap();
-                    self.proposals.push(&proposal.clone().into());
-                    BlockHeightCallbackRetValue{ proposal_id: near_sdk::json_types::U64(proposal.id) }
-                } else {
-                    env::panic_str("ERR_WRONG_VAL_RECEIVED")
-                }
-            },
-            _ => env::panic_str("ERR_CALL_FAILED"),
-        }
+    pub fn set_block_height_callback(&mut self, #[allow(unused_mut)] mut proposal: Proposal, #[callback_unwrap] set_result: SetReturnType) -> BlockHeightCallbackRetValue {
+        proposal.social_db_post_block_height = set_result.block_height.into();
+        self.proposals.push(&proposal.clone().into());
+        BlockHeightCallbackRetValue { proposal_id: near_sdk::json_types::U64(proposal.id) }
     }
 
     pub fn get_posts_by_author(&self, author: AccountId) -> Vec<PostId> {
