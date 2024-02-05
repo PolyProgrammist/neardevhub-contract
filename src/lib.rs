@@ -55,6 +55,7 @@ pub struct Contract {
     pub proposals: Vector<VersionedProposal>,
     pub label_to_proposals: UnorderedMap<String, HashSet<ProposalId>>,
     pub author_proposals: UnorderedMap<AccountId, HashSet<ProposalId>>,
+    pub proposal_categories: Vec<String>,
     pub communities: UnorderedMap<CommunityHandle, Community>,
     pub featured_communities: Vec<FeaturedCommunity>,
     pub available_addons: UnorderedMap<AddOnId, AddOn>,
@@ -76,6 +77,7 @@ impl Contract {
             proposals: Vector::new(StorageKey::Proposals),
             label_to_proposals: UnorderedMap::new(StorageKey::LabelToProposals),
             author_proposals: UnorderedMap::new(StorageKey::AuthorProposals),
+            proposal_categories: default_categories(),
             communities: UnorderedMap::new(StorageKey::Communities),
             featured_communities: Vec::new(),
             available_addons: UnorderedMap::new(StorageKey::AddOns),
@@ -241,6 +243,11 @@ impl Contract {
         );
         require!(body.clone().latest_version().payouts.len() == 0, "Can't add proposal with payouts at the beginning");
 
+        require!(
+            self.proposal_categories.contains(&body.clone().latest_version().category),
+            "Unknown category"
+        );
+
         for label in &labels {
             let mut other_proposals = self.label_to_proposals.get(label).unwrap_or_default();
             other_proposals.insert(id);
@@ -335,7 +342,7 @@ impl Contract {
     }
 
     pub fn is_allowed_to_edit_proposal(&self, proposal_id: ProposalId, editor: Option<AccountId>) -> bool {
-        near_sdk::log!("is_allowed_to_edit");
+        near_sdk::log!("is_allowed_to_edit_proposal");
         let proposal: Proposal = self
             .proposals
             .get(proposal_id)
@@ -532,6 +539,11 @@ impl Contract {
             "This account is only allowed to change proposal status from DRAFT to REVIEW"
         );
 
+        require!(
+            self.proposal_categories.contains(&body.clone().latest_version().category),
+            "Unknown category"
+        );
+
         let old_snapshot = proposal.snapshot.clone();
         let old_labels_set = old_snapshot.labels.clone();
         let new_labels = labels;
@@ -581,6 +593,20 @@ impl Contract {
         notify::notify_edit_proposal(id, proposal_author);
     }
 
+    pub fn get_allowed_categories(&self) -> Vec<String> {
+        near_sdk::log!("get_allowed_categories");
+        self.proposal_categories.clone()
+    }
+
+    #[payable]
+    pub fn set_allowed_categories(&mut self, new_categories: Vec<String>) {
+        let editor_id = env::predecessor_account_id();
+        require!(
+            self.has_moderator(editor_id.clone()) || editor_id.clone() == env::current_account_id(), 
+            "Only the admin and moderators can set categories"
+        );
+        self.proposal_categories = new_categories;
+    }
 
     pub fn get_community(&self, handle: CommunityHandle) -> Option<Community> {
         self.communities.get(&handle)

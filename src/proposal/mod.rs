@@ -134,3 +134,15 @@ pub fn get_subscribers(proposal: Proposal) -> Vec<String> {
     }
     result
 }
+
+pub fn default_categories() -> Vec<String> {
+    vec![
+        String::from("DevDAO Operations"),
+        String::from("Decentralized DevRel"),
+        String::from("NEAR Campus"),
+        String::from("Marketing"),
+        String::from("Events"),
+        String::from("Tooling & Infrastructures"),
+        String::from("Other"),
+    ]
+}

@@ -19,7 +19,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "proposal_body_version": "V0",
                 "name": "another post",
                 "description": "some description",
-                "category": "cat",
+                "category": "Marketing",
                 "summary": "sum",
                 "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
                 "requested_sponsorship_amount": "1000000000",
@@ -46,7 +46,7 @@ async fn test_proposal() -> anyhow::Result<()> {
         .await?
         .json()?;
 
-    assert_eq!(get_proposal["snapshot"]["category"], "cat");
+    assert_eq!(get_proposal["snapshot"]["category"], "Marketing");
 
     let social_db_post_block_height: u64 = get_proposal["social_db_post_block_height"].as_str().unwrap().parse::<u64>()?;
     assert!(social_db_post_block_height > 0);
@@ -59,7 +59,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "proposal_body_version": "V0",
                 "name": "another post",
                 "description": "some description",
-                "category": "another",
+                "category": "Events",
                 "summary": "sum",
                 "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
                 "requested_sponsorship_amount": "1000000000",
@@ -86,7 +86,7 @@ async fn test_proposal() -> anyhow::Result<()> {
         .await?
         .json()?;
 
-    assert_eq!(get_proposal["snapshot"]["category"], "another");
+    assert_eq!(get_proposal["snapshot"]["category"], "Events");
 
     let _add_second_proposal = contract
         .call("add_proposal")
@@ -95,7 +95,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "proposal_body_version": "V0",
                 "name": "One more",
                 "description": "some description",
-                "category": "cat",
+                "category": "Events",
                 "summary": "sum",
                 "linked_proposals": [],
                 "requested_sponsorship_amount": "200",
@@ -155,7 +155,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "proposal_body_version": "V0",
                 "name": "another author",
                 "description": "some description",
-                "category": "cat",
+                "category": "Events",
                 "summary": "sum",
                 "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
                 "requested_sponsorship_amount": "1000000000",
@@ -296,7 +296,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "proposal_body_version": "V0",
                 "name": "another post",
                 "description": "some description",
-                "category": "cat",
+                "category": "Events",
                 "summary": "sum",
                 "linked_proposals": [],
                 "requested_sponsorship_amount": "1000000000",
@@ -320,7 +320,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "proposal_body_version": "V0",
                 "name": "another post",
                 "description": "some description",
-                "category": "cat",
+                "category": "Events",
                 "summary": "sum",
                 "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
                 "requested_sponsorship_amount": "1000000000",
@@ -348,7 +348,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "proposal_body_version": "V0",
                 "name": "another post",
                 "description": "some description",
-                "category": "another",
+                "category": "Events",
                 "summary": "sum",
                 "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
                 "requested_sponsorship_amount": "1000000000",
@@ -375,7 +375,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "proposal_body_version": "V0",
                 "name": "another post",
                 "description": "some description",
-                "category": "another",
+                "category": "Events",
                 "summary": "sum",
                 "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
                 "requested_sponsorship_amount": "1000000000",
@@ -394,6 +394,67 @@ async fn test_proposal() -> anyhow::Result<()> {
         .await?;
 
     assert!(edit_proposal.is_success());
+
+    let set_categories = second_account
+        .call(contract.id(), "set_allowed_categories")
+        .args_json(json!({"new_categories": ["One", "Two"]}))
+        .max_gas()
+        .deposit(NearToken::from_near(1))
+        .transact()
+        .await?;
+
+    assert!(set_categories.is_failure());
+
+    let _set_categories = contract
+        .call("set_allowed_categories")
+        .args_json(json!({"new_categories": ["Two", "Three"]}))
+        .max_gas()
+        .deposit(NearToken::from_near(1))
+        .transact()
+        .await?;
+
+    let get_categories: serde_json::Value = contract
+        .call("get_allowed_categories")
+        .args_json(json!({}))
+        .view()
+        .await?
+        .json()?;
+
+    let categories: Vec<String> = get_categories
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|x| String::from(x.clone().as_str().unwrap())).collect::<Vec<_>>();
+
+    assert_eq!(categories, vec!["Two", "Three"]);
+
+    let edit_proposal = contract
+        .call("edit_proposal")
+        .args_json(json!({
+            "id": 0,
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "bad cat",
+                "summary": "sum",
+                "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "supervisor": "frol.near",
+                "sponsor": "neardevdao.near",
+                "payouts": [],
+                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+
+    assert!(edit_proposal.is_failure());
 
     Ok(())
 }
