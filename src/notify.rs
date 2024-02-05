@@ -1,5 +1,5 @@
 use crate::social_db::social_db_contract;
-use crate::{get_subscribers, PostId, Proposal};
+use crate::{get_subscribers, PostId, Proposal, ProposalId};
 use near_sdk::serde_json::json;
 use near_sdk::{env, AccountId, Promise};
 
@@ -61,7 +61,7 @@ pub fn notify_proposal_subscribers(proposal: Proposal) {
     let accounts = get_subscribers(proposal.clone());
 
     notify_accounts(accounts, json!({
-        "type": "devgovgigs/proposal_mention",
+        "type": "devgovgigs/mention",
         "proposal": proposal.id,
     }))
 }
@@ -76,18 +76,32 @@ pub fn notify_mentions(text: &str, post_id: PostId) {
 }
 
 pub fn notify_like(post_id: PostId, post_author: AccountId) -> Promise {
-    notify(post_id, post_author, "like")
+    notify(post_author, notify_value(post_id, "like"))
 }
 
 pub fn notify_reply(post_id: PostId, post_author: AccountId) -> Promise {
-    notify(post_id, post_author, "reply")
+    notify(post_author, notify_value(post_id, "reply"))
 }
 
 pub fn notify_edit(post_id: PostId, post_author: AccountId) -> Promise {
-    notify(post_id, post_author, "edit")
+    notify(post_author, notify_value(post_id, "edit"))
 }
 
-fn notify(post_id: PostId, post_author: AccountId, action: &str) -> Promise {
+pub fn notify_edit_proposal(proposal_id: ProposalId, post_author: AccountId) -> Promise {
+    notify(post_author, json!({
+        "type": format!("devgovgigs/{}", "edit"),
+        "proposal": proposal_id,
+    }))
+}
+
+fn notify_value(post_id: PostId, action: &str) -> serde_json::Value {
+    json!({
+        "type": format!("devgovgigs/{}", action),
+        "post": post_id,
+    })
+}
+
+fn notify(post_author: AccountId, notify_value: serde_json::Value) -> Promise {
     social_db_contract()
         .with_static_gas(env::prepaid_gas().saturating_div(4))
         .with_attached_deposit(env::attached_deposit())
@@ -96,10 +110,7 @@ fn notify(post_id: PostId, post_author: AccountId, action: &str) -> Promise {
                 "index": {
                     "notify": json!({
                         "key": post_author,
-                        "value": {
-                            "type": format!("devgovgigs/{}", action),
-                            "post": post_id,
-                        },
+                        "value": notify_value,
                     }).to_string()
                 }
             }

@@ -578,7 +578,7 @@ impl Contract {
             self.label_to_proposals.insert(&label_to_add, &proposals);
         }
 
-        notify::notify_edit(id, proposal_author);
+        notify::notify_edit_proposal(id, proposal_author);
     }
 
 
@@ -878,7 +878,7 @@ mod tests {
             "receiver_account": "polyprogrammist.near",
             "supervisor": "frol.near",
             "sponsor": "neardevdao.near",
-            "payouts": [[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]],
+            "payouts": [],
             "timeline_status": {"timeline_status": "DRAFT"}
         }"#).unwrap();
         contract.add_proposal(VersionedProposalBody::V0(body), HashSet::new());
@@ -888,7 +888,7 @@ mod tests {
         if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, receipt_index, attached_deposit, prepaid_gas, gas_weight } = &receipts[2].actions[0] {
             assert_eq!(method_name, b"set");
             println!("{:?}", args);
-            assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/proposal_mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/proposal_mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"frol.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/proposal_mention\\\",\\\"proposal\\\":0}}]\"}}}}");
+            assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"frol.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}}]\"}}}}");
         } else {
             assert!(false, "Expected a function call ...")
         }
