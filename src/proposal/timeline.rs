@@ -41,3 +41,11 @@ pub struct FundedStatus {
     payment_processing_status: PaymentProcessingStatus,
     trustees_released_payment: bool,
 }
+
+
+pub fn is_draft(ts: TimelineStatus) -> bool {
+    match ts {
+        TimelineStatus::Draft => true,
+        _ => false,
+    }
+}

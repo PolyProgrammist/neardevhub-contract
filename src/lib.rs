@@ -19,6 +19,7 @@ use near_sdk::serde::Serialize;
 use post::*;
 use proposal::*;
 use crate::social_db::SetReturnType;
+use timeline::is_draft;
 
 use crate::social_db::social_db_contract;
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
@@ -63,7 +64,7 @@ pub struct Contract {
 impl Contract {
     #[init]
     pub fn new() -> Self {
-        migrations::state_version_write(&migrations::StateVersion::V9);
+        migrations::state_version_write(&migrations::StateVersion::V10);
 
         let mut contract = Self {
             posts: Vector::new(StorageKey::Posts),
@@ -257,12 +258,15 @@ impl Contract {
             snapshot_history: vec![],
         };
 
+        require!(
+            is_draft(body.latest_version().timeline_status),
+            "Cannot create proposal which is not in a draft state"
+        );
+
         proposal::repost::publish_to_socialdb_feed(
             Self::ext(env::current_account_id())
             .with_static_gas(env::prepaid_gas().saturating_div(3))
             .set_block_height_callback(proposal.clone()), proposal.clone());
-
-        let desc = get_proposal_description(body);
 
         notify::notify_proposal_subscribers(proposal.clone());
     }

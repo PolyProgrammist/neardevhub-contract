@@ -290,5 +290,29 @@ async fn test_proposal() -> anyhow::Result<()> {
     let expected_labels: Vec<&str> = ["test1", "test2", "test3"].to_vec();
     assert_eq!(proposal_labels, expected_labels);
 
+    let add_proposal = contract
+        .call("add_proposal")
+        .args_json(json!({
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "cat",
+                "summary": "sum",
+                "linked_proposals": [],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "payouts": [],
+                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": false, "reviewer_completed_attestation": false }
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+    println!("{:?}", !add_proposal.is_success());
+
     Ok(())
 }
