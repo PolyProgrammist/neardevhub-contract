@@ -27,7 +27,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
-                "payouts": [],
+                "payouts": [ ],
                 "timeline_status": {"timeline_status": "DRAFT"}
             },
             "labels": ["test1", "test2"],
@@ -312,6 +312,34 @@ async fn test_proposal() -> anyhow::Result<()> {
         .transact()
         .await?;
     assert!(!add_proposal_incorrect.is_success());
+
+    let add_proposal_incorrect = contract
+        .call("add_proposal")
+        .args_json(json!({
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "cat",
+                "summary": "sum",
+                "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "supervisor": "frol.near",
+                "sponsor": "neardevdao.near",
+                "payouts": [ "2cXzSP1Z9AM8A7mg18voh9c4sBmiUzxzyDXiYW5fiZd6" ],
+                "timeline_status": {"timeline_status": "DRAFT"}
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+
+    assert!(!add_proposal_incorrect.is_success());
+
 
     let edit_proposal_incorrect = second_account.call(contract.id(), "edit_proposal")
         .args_json(json!({

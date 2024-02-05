@@ -239,6 +239,7 @@ impl Contract {
             ),
             "Cannot use these labels"
         );
+        require!(body.clone().latest_version().payouts.len() == 0, "Can't add proposal with payouts at the beginning");
 
         for label in &labels {
             let mut other_proposals = self.label_to_proposals.get(label).unwrap_or_default();
