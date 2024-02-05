@@ -68,7 +68,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
                 "payouts": [],
-                "timeline_status": {"timeline_status": "DRAFT"}
+                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
             },
             "labels": ["test1", "test2"],
         }))
@@ -141,7 +141,6 @@ async fn test_proposal() -> anyhow::Result<()> {
     let expected_ids: Vec<u64> = [0u64, 1u64].to_vec();
 
     assert_eq!(proposal_ids, expected_ids);
-
     
     let second_account = worker.root_account()?
         .create_subaccount("second")
@@ -290,7 +289,7 @@ async fn test_proposal() -> anyhow::Result<()> {
     let expected_labels: Vec<&str> = ["test1", "test2", "test3"].to_vec();
     assert_eq!(proposal_labels, expected_labels);
 
-    let add_proposal = contract
+    let add_proposal_incorrect = contract
         .call("add_proposal")
         .args_json(json!({
             "body": {
@@ -312,7 +311,61 @@ async fn test_proposal() -> anyhow::Result<()> {
         .deposit(deposit_amount)
         .transact()
         .await?;
-    println!("{:?}", !add_proposal.is_success());
+    assert!(!add_proposal_incorrect.is_success());
+
+    let edit_proposal_incorrect = second_account.call(contract.id(), "edit_proposal")
+        .args_json(json!({
+            "id": 2,
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "another",
+                "summary": "sum",
+                "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "supervisor": "frol.near",
+                "sponsor": "neardevdao.near",
+                "payouts": [],
+                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+
+    assert!(!edit_proposal_incorrect.is_success());
+
+    let edit_proposal = second_account.call(contract.id(), "edit_proposal")
+        .args_json(json!({
+            "id": 2,
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "another",
+                "summary": "sum",
+                "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "supervisor": "frol.near",
+                "sponsor": "neardevdao.near",
+                "payouts": [],
+                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": false, "reviewer_completed_attestation": false }
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+
+    assert!(edit_proposal.is_success());
 
     Ok(())
 }

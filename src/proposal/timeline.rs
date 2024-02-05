@@ -49,3 +49,12 @@ pub fn is_draft(ts: TimelineStatus) -> bool {
         _ => false,
     }
 }
+
+pub fn is_empty_review(ts: TimelineStatus) -> bool {
+    match ts {
+        TimelineStatus::Review(review_status) => {
+            return !review_status.sponsor_requested_review && !review_status.reviewer_completed_attestation;
+        },
+        _ => false,
+    }
+}

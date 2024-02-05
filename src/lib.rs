@@ -19,7 +19,7 @@ use near_sdk::serde::Serialize;
 use post::*;
 use proposal::*;
 use crate::social_db::SetReturnType;
-use timeline::is_draft;
+use timeline::{is_draft, is_empty_review};
 
 use crate::social_db::social_db_contract;
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
@@ -520,6 +520,16 @@ impl Contract {
         let editor_id = env::predecessor_account_id();
         let mut proposal: Proposal =
             self.proposals.get(id).unwrap_or_else(|| panic!("Proposal id {} not found", id)).into();
+
+        require!(
+            self.has_moderator(editor_id.clone()) || editor_id.clone() == env::current_account_id() || (
+                is_draft(proposal.snapshot.body.clone().latest_version().timeline_status) && (
+                    is_empty_review(body.clone().latest_version().timeline_status) || 
+                    is_draft(body.clone().latest_version().timeline_status)
+                )
+            ),
+            "This account is only allowed to change proposal status from DRAFT to REVIEW"
+        );
 
         let old_snapshot = proposal.snapshot.clone();
         let old_labels_set = old_snapshot.labels.clone();
