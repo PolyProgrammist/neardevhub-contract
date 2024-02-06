@@ -857,6 +857,7 @@ mod tests {
     use near_sdk::test_utils::{get_created_receipts, VMContextBuilder};
     use near_sdk::{testing_env, AccountId, MockedBlockchain, VMContext};
     use regex::Regex;
+    use serde_json::json;
 
     use super::Contract;
 
@@ -892,11 +893,10 @@ mod tests {
         testing_env!(context);
         let mut contract = Contract::new();
 
-        let body: ProposalBodyV0 = near_sdk::serde_json::from_str(r#"
-        {
+        let body: ProposalBodyV0 = near_sdk::serde_json::from_value(json!({
+            "proposal_body_version": "V0",
             "name": "another post",
-            "description": "Hello to @petersalomonsen.near and @psalomo.near. This is an idea with mentions.",
-            "category": "cat",
+            "description": "Hello to @petersalomonsen.near and @psalomo.near. This is an idea with mentions.",            "category": "Marketing",
             "summary": "sum",
             "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
             "requested_sponsorship_amount": "1000000000",
@@ -906,14 +906,13 @@ mod tests {
             "sponsor": "neardevdao.near",
             "payouts": [],
             "timeline_status": {"timeline_status": "DRAFT"}
-        }"#).unwrap();
+        })).unwrap();
         contract.add_proposal(VersionedProposalBody::V0(body), HashSet::new());
         let receipts = get_created_receipts();
         assert_eq!(3, receipts.len());
 
         if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, receipt_index, attached_deposit, prepaid_gas, gas_weight } = &receipts[2].actions[0] {
             assert_eq!(method_name, b"set");
-            println!("{:?}", args);
             assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"frol.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}}]\"}}}}");
         } else {
             assert!(false, "Expected a function call ...")

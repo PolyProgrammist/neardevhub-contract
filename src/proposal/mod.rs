@@ -11,6 +11,7 @@ use crate::{Balance, SponsorshipToken};
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{AccountId, BlockHeight, Timestamp};
+use near_sdk::json_types::Base58CryptoHash;
 
 use self::timeline::TimelineStatus;
 
@@ -89,7 +90,7 @@ pub struct ProposalBodyV0 {
     pub receiver_account: AccountId,
     pub requested_sponsor: Option<AccountId>,
     pub supervisor: Option<AccountId>,
-    pub payouts: Vec<String>,
+    pub payouts: Vec<Base58CryptoHash>,
     pub timeline_status: TimelineStatus,
 }
 

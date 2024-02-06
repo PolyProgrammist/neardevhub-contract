@@ -383,7 +383,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
-                "payouts": [],
+                "payouts": [ "5PHaiXRvtZTYVSEBN5prT6M1odceCPxKzgpTZDmqrZsC" ],
                 "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": false, "reviewer_completed_attestation": false }
             },
             "labels": ["test1", "test2"],
