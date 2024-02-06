@@ -267,7 +267,7 @@ impl Contract {
         };
 
         require!(
-            is_draft(body.latest_version().timeline_status),
+            is_draft(body.latest_version().timeline),
             "Cannot create proposal which is not in a draft state"
         );
 
@@ -531,9 +531,9 @@ impl Contract {
 
         require!(
             self.has_moderator(editor_id.clone()) || editor_id.clone() == env::current_account_id() || (
-                is_draft(proposal.snapshot.body.clone().latest_version().timeline_status) && (
-                    is_empty_review(body.clone().latest_version().timeline_status) || 
-                    is_draft(body.clone().latest_version().timeline_status)
+                is_draft(proposal.snapshot.body.clone().latest_version().timeline) && (
+                    is_empty_review(body.clone().latest_version().timeline) || 
+                    is_draft(body.clone().latest_version().timeline)
                 )
             ),
             "This account is only allowed to change proposal status from DRAFT to REVIEW"
@@ -905,7 +905,7 @@ mod tests {
             "supervisor": "frol.near",
             "sponsor": "neardevdao.near",
             "payouts": [],
-            "timeline_status": {"timeline_status": "DRAFT"}
+            "timeline": {"status": "DRAFT"}
         })).unwrap();
         contract.add_proposal(VersionedProposalBody::V0(body), HashSet::new());
         let receipts = get_created_receipts();

@@ -91,7 +91,7 @@ pub struct ProposalBodyV0 {
     pub requested_sponsor: Option<AccountId>,
     pub supervisor: Option<AccountId>,
     pub payouts: Vec<Base58CryptoHash>,
-    pub timeline_status: TimelineStatus,
+    pub timeline: TimelineStatus,
 }
 
 

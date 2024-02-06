@@ -28,7 +28,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
                 "payouts": [ ],
-                "timeline_status": {"timeline_status": "DRAFT"}
+                "timeline": {"status": "DRAFT"}
             },
             "labels": ["test1", "test2"],
         }))
@@ -68,7 +68,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
                 "payouts": [],
-                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+                "timeline": {"status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
             },
             "labels": ["test1", "test2"],
         }))
@@ -104,7 +104,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
                 "payouts": [],
-                "timeline_status": {"timeline_status": "DRAFT"}
+                "timeline": {"status": "DRAFT"}
             },
             "labels": ["test3"],
         }))
@@ -164,7 +164,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
                 "payouts": [],
-                "timeline_status": {"timeline_status": "DRAFT"}
+                "timeline": {"status": "DRAFT"}
             },
             "labels": ["test2", "test3"],
         }))
@@ -303,7 +303,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_token": "USD",
                 "receiver_account": "polyprogrammist.near",
                 "payouts": [],
-                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": false, "reviewer_completed_attestation": false }
+                "timeline": {"status": "REVIEW", "sponsor_requested_review": false, "reviewer_completed_attestation": false }
             },
             "labels": ["test1", "test2"],
         }))
@@ -329,7 +329,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
                 "payouts": [ "2cXzSP1Z9AM8A7mg18voh9c4sBmiUzxzyDXiYW5fiZd6" ],
-                "timeline_status": {"timeline_status": "DRAFT"}
+                "timeline": {"status": "DRAFT"}
             },
             "labels": ["test1", "test2"],
         }))
@@ -357,7 +357,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
                 "payouts": [],
-                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+                "timeline": {"status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
             },
             "labels": ["test1", "test2"],
         }))
@@ -384,7 +384,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
                 "payouts": [ "5PHaiXRvtZTYVSEBN5prT6M1odceCPxKzgpTZDmqrZsC" ],
-                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": false, "reviewer_completed_attestation": false }
+                "timeline": {"status": "REVIEW", "sponsor_requested_review": false, "reviewer_completed_attestation": false }
             },
             "labels": ["test1", "test2"],
         }))
@@ -445,7 +445,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "supervisor": "frol.near",
                 "sponsor": "neardevdao.near",
                 "payouts": [],
-                "timeline_status": {"timeline_status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+                "timeline": {"status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
             },
             "labels": ["test1", "test2"],
         }))
