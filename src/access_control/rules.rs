@@ -111,9 +111,9 @@ impl From<String> for Rule {
     }
 }
 
-impl Into<String> for Rule {
-    fn into(self) -> String {
-        match self {
+impl From<Rule> for String {
+    fn from(val: Rule) -> Self {
+        match val {
             Rule::ExactMatch(s) => s.to_string(),
             Rule::StartsWith(s) => format!("{}{}", STARTS_WITH, s).to_string(),
             Rule::Any() => ANY.to_string(),
@@ -151,7 +151,7 @@ impl RulesList {
     pub fn find_restricted(&self, labels: &[String]) -> HashSet<String> {
         self.rules
             .keys()
-            .map(|key| match key {
+            .flat_map(|key| match key {
                 Rule::ExactMatch(rule) => {
                     labels.iter().filter(|label| label == &rule).collect::<Vec<_>>()
                 }
@@ -162,7 +162,6 @@ impl RulesList {
                     vec![]
                 }
             })
-            .flatten()
             .cloned()
             .collect()
     }

@@ -44,9 +44,9 @@ impl From<String> for Member {
     }
 }
 
-impl Into<String> for Member {
-    fn into(self) -> String {
-        match self {
+impl From<Member> for String {
+    fn from(val: Member) -> Self {
+        match val {
             Member::Account(s) => s.to_string(),
             Member::Team(s) => format!("{}{}", TEAM, s).to_string(),
         }
@@ -283,7 +283,7 @@ impl MembersList {
         self.members
             .get(&Member::Team("moderators".to_string()))
             .map(|team| team.last_version().children)
-            .unwrap_or(HashSet::new())
+            .unwrap_or_default()
     }
 }
 

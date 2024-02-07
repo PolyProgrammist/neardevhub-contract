@@ -48,17 +48,13 @@ pub struct FundedStatus {
 }
 
 pub fn is_draft(ts: &TimelineStatus) -> bool {
-    match ts {
-        TimelineStatus::Draft => true,
-        _ => false,
-    }
+    matches!(ts, TimelineStatus::Draft)
 }
 
 pub fn is_empty_review(ts: &TimelineStatus) -> bool {
     match ts {
         TimelineStatus::Review(review_status) => {
-            return !review_status.sponsor_requested_review
-                && !review_status.reviewer_completed_attestation;
+            !review_status.sponsor_requested_review && !review_status.reviewer_completed_attestation
         }
         _ => false,
     }

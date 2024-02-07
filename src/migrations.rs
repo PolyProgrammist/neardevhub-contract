@@ -84,8 +84,7 @@ impl Contract {
             let versioned_post = contract.posts.get(i);
             if let Some(versioned_post) = versioned_post {
                 let post: Post = versioned_post.into();
-                let mut author_posts =
-                    contract.authors.get(&post.author_id).unwrap_or_else(|| HashSet::new());
+                let mut author_posts = contract.authors.get(&post.author_id).unwrap_or_default();
                 author_posts.insert(post.id);
                 contract.authors.insert(&post.author_id, &author_posts);
             }
