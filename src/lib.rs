@@ -926,7 +926,7 @@ mod tests {
             "name": "another post",
             "description": "Hello to @petersalomonsen.near and @psalomo.near. This is an idea with mentions.",            "category": "Marketing",
             "summary": "sum",
-            "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+            "linked_proposals": [1, 3],
             "requested_sponsorship_amount": "1000000000",
             "requested_sponsorship_token": "USD",
             "receiver_account": "polyprogrammist.near",

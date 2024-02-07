@@ -6,7 +6,6 @@ use std::collections::HashSet;
 use self::timeline::TimelineStatus;
 
 use crate::notify::get_text_mentions;
-use crate::post::PostId;
 use crate::str_serializers::*;
 use crate::{Balance, SponsorshipToken};
 
@@ -78,16 +77,6 @@ pub struct ProposalSnapshot {
 
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
-#[serde(tag = "link_type")]
-#[borsh(crate = "near_sdk::borsh")]
-#[schemars(crate = "near_sdk::schemars")]
-pub enum ProposalLink {
-    ProposalId { id: ProposalId },
-    PostId { id: PostId },
-}
-
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
-#[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
 #[schemars(crate = "near_sdk::schemars")]
 pub struct ProposalBodyV0 {
@@ -95,7 +84,7 @@ pub struct ProposalBodyV0 {
     pub category: String,
     pub summary: String,
     pub description: String,
-    pub linked_proposals: Vec<ProposalLink>,
+    pub linked_proposals: Vec<ProposalId>,
     #[serde(
         serialize_with = "u128_dec_format::serialize",
         deserialize_with = "u128_dec_format::deserialize"
