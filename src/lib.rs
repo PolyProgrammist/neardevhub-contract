@@ -112,7 +112,7 @@ impl Contract {
 
     pub fn get_all_post_ids(&self) -> Vec<PostId> {
         near_sdk::log!("get_all_post_ids");
-        (0..self.posts.len()).into_iter().collect()
+        (0..self.posts.len()).collect()
     }
 
     pub fn get_children_ids(&self, post_id: Option<PostId>) -> Vec<PostId> {
@@ -150,7 +150,7 @@ impl Contract {
 
     pub fn get_all_proposal_ids(&self) -> Vec<ProposalId> {
         near_sdk::log!("get_all_proposal_ids");
-        (0..self.proposals.len()).into_iter().collect()
+        (0..self.proposals.len()).collect()
     }
 
     #[payable]
@@ -209,7 +209,7 @@ impl Contract {
         // Don't forget to add an empty list of your own children.
         self.post_to_children.insert(&id, &vec![]);
 
-        let mut author_posts = self.authors.get(&author_id).unwrap_or_else(|| HashSet::new());
+        let mut author_posts = self.authors.get(&author_id).unwrap_or_default();
         author_posts.insert(post.id);
         self.authors.insert(&post.author_id, &author_posts);
 
@@ -246,7 +246,7 @@ impl Contract {
             "Cannot use these labels"
         );
         require!(
-            proposal_body.payouts.len() == 0,
+            proposal_body.payouts.is_empty(),
             "Can't add proposal with payouts at the beginning"
         );
 
@@ -263,8 +263,7 @@ impl Contract {
             self.label_to_proposals.insert(label, &other_proposals);
         }
 
-        let mut author_proposals =
-            self.author_proposals.get(&author_id).unwrap_or_else(|| HashSet::new());
+        let mut author_proposals = self.author_proposals.get(&author_id).unwrap_or_default();
         author_proposals.insert(id);
         self.author_proposals.insert(&author_id, &author_proposals);
 
@@ -304,7 +303,7 @@ impl Contract {
 
     pub fn get_posts_by_author(&self, author: AccountId) -> Vec<PostId> {
         near_sdk::log!("get_posts_by_author");
-        self.authors.get(&author).map(|posts| posts.into_iter().collect()).unwrap_or(Vec::new())
+        self.authors.get(&author).map(|posts| posts.into_iter().collect()).unwrap_or_default()
     }
 
     pub fn get_posts_by_label(&self, label: String) -> Vec<PostId> {
@@ -320,7 +319,7 @@ impl Contract {
         self.author_proposals
             .get(&author)
             .map(|proposals| proposals.into_iter().collect())
-            .unwrap_or(Vec::new())
+            .unwrap_or_default()
     }
 
     pub fn get_proposals_by_label(&self, label: String) -> Vec<ProposalId> {
