@@ -35,7 +35,7 @@ pub fn get_text_mentions(text: &str) -> Vec<String> {
 }
 
 pub fn notify_accounts(accounts: Vec<String>, notify_value: serde_json::Value) {
-    if !accounts.is_empty() {
+    if accounts.len() > 0 {
         let mut notify_values = Vec::new();
 
         for account in accounts {

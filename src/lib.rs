@@ -112,7 +112,7 @@ impl Contract {
 
     pub fn get_all_post_ids(&self) -> Vec<PostId> {
         near_sdk::log!("get_all_post_ids");
-        (0..self.posts.len()).collect()
+        (0..self.posts.len()).into_iter().collect()
     }
 
     pub fn get_children_ids(&self, post_id: Option<PostId>) -> Vec<PostId> {
@@ -150,7 +150,7 @@ impl Contract {
 
     pub fn get_all_proposal_ids(&self) -> Vec<ProposalId> {
         near_sdk::log!("get_all_proposal_ids");
-        (0..self.proposals.len()).collect()
+        (0..self.proposals.len()).into_iter().collect()
     }
 
     #[payable]
@@ -209,7 +209,7 @@ impl Contract {
         // Don't forget to add an empty list of your own children.
         self.post_to_children.insert(&id, &vec![]);
 
-        let mut author_posts = self.authors.get(&author_id).unwrap_or_default();
+        let mut author_posts = self.authors.get(&author_id).unwrap_or_else(|| HashSet::new());
         author_posts.insert(post.id);
         self.authors.insert(&post.author_id, &author_posts);
 
@@ -246,7 +246,7 @@ impl Contract {
             "Cannot use these labels"
         );
         require!(
-            proposal_body.payouts.is_empty(),
+            proposal_body.payouts.len() == 0,
             "Can't add proposal with payouts at the beginning"
         );
 
@@ -263,7 +263,8 @@ impl Contract {
             self.label_to_proposals.insert(label, &other_proposals);
         }
 
-        let mut author_proposals = self.author_proposals.get(&author_id).unwrap_or_default();
+        let mut author_proposals =
+            self.author_proposals.get(&author_id).unwrap_or_else(|| HashSet::new());
         author_proposals.insert(id);
         self.author_proposals.insert(&author_id, &author_proposals);
 
@@ -303,7 +304,7 @@ impl Contract {
 
     pub fn get_posts_by_author(&self, author: AccountId) -> Vec<PostId> {
         near_sdk::log!("get_posts_by_author");
-        self.authors.get(&author).map(|posts| posts.into_iter().collect()).unwrap_or_default()
+        self.authors.get(&author).map(|posts| posts.into_iter().collect()).unwrap_or(Vec::new())
     }
 
     pub fn get_posts_by_label(&self, label: String) -> Vec<PostId> {
@@ -319,7 +320,7 @@ impl Contract {
         self.author_proposals
             .get(&author)
             .map(|proposals| proposals.into_iter().collect())
-            .unwrap_or_default()
+            .unwrap_or(Vec::new())
     }
 
     pub fn get_proposals_by_label(&self, label: String) -> Vec<ProposalId> {
@@ -661,9 +662,9 @@ impl Contract {
         account_id: AccountId,
         community_handle: CommunityHandle,
     ) -> CommunityPermissions {
-        let community = self.get_community(community_handle.to_owned()).unwrap_or_else(|| {
-            panic!("Community with handle `{}` does not exist", community_handle)
-        });
+        let community = self.get_community(community_handle.to_owned()).expect(
+            format!("Community with handle `{}` does not exist", community_handle).as_str(),
+        );
 
         CommunityPermissions {
             can_configure: community.admins.contains(&account_id)
@@ -722,7 +723,7 @@ impl Contract {
         }
         let addon = self
             .get_addon(id.clone())
-            .unwrap_or_else(|| panic!("Add-on with id `{}` does not exist", id))
+            .expect(&format!("Add-on with id `{}` does not exist", id))
             .clone();
 
         self.available_addons.remove(&addon.id);
@@ -740,14 +741,14 @@ impl Contract {
     pub fn get_community_addons(&self, handle: CommunityHandle) -> Vec<CommunityAddOn> {
         let community = self
             .get_community(handle.clone())
-            .unwrap_or_else(|| panic!("Community not found with handle `{}`", handle));
-        community.addons
+            .expect(format!("Community not found with handle `{}`", handle).as_str());
+        return community.addons;
     }
 
     pub fn set_community_addons(&mut self, handle: CommunityHandle, addons: Vec<CommunityAddOn>) {
         let mut community = self
             .get_community(handle.clone())
-            .unwrap_or_else(|| panic!("Community not found with handle `{}`", handle));
+            .expect(format!("Community not found with handle `{}`", handle).as_str());
         community.addons = addons;
         self.update_community(handle, community);
     }
@@ -760,7 +761,7 @@ impl Contract {
     ) {
         let mut community = self
             .get_community(handle.clone())
-            .unwrap_or_else(|| panic!("Community not found with handle `{}`", handle));
+            .expect(format!("Community not found with handle `{}`", handle).as_str());
         if let Some(existing_addon) =
             community.addons.iter_mut().find(|current| current.id == community_addon.id)
         {
@@ -776,11 +777,10 @@ impl Contract {
             .get_account_community_permissions(env::predecessor_account_id(), handle.to_owned())
             .can_configure
         {
-            self.get_community(handle.to_owned())
+            return self.get_community(handle.to_owned());
         } else {
-            None
+            return None;
         };
-        None
     }
 
     pub fn update_community(
@@ -830,7 +830,7 @@ impl Contract {
 
         let community = self
             .get_community(handle.clone())
-            .unwrap_or_else(|| panic!("Community with handle `{}` does not exist", handle));
+            .expect(&format!("Community with handle `{}` does not exist", handle));
 
         self.communities.remove(&community.handle);
 
@@ -848,7 +848,7 @@ impl Contract {
 
         // Check if every handle corresponds to an existing community
         for handle in &handles {
-            require!(self.communities.get(handle).is_some(), "Community does not exist.");
+            require!(self.communities.get(&handle).is_some(), "Community does not exist.");
         }
 
         // Replace the existing featured communities with the new ones
