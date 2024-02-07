@@ -1,6 +1,6 @@
-use near_sdk::borsh::{BorshSerialize, BorshDeserialize};
+use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 use near_sdk::schemars::JsonSchema;
-use near_sdk::serde::{Serialize, Deserialize};
+use near_sdk::serde::{Deserialize, Serialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde", tag = "status", rename_all = "SCREAMING_SNAKE_CASE")]
@@ -22,7 +22,7 @@ pub enum TimelineStatus {
 #[schemars(crate = "near_sdk::schemars")]
 pub struct ReviewStatus {
     sponsor_requested_review: bool,
-    reviewer_completed_attestation: bool
+    reviewer_completed_attestation: bool,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
@@ -47,7 +47,6 @@ pub struct FundedStatus {
     trustees_released_payment: bool,
 }
 
-
 pub fn is_draft(ts: &TimelineStatus) -> bool {
     match ts {
         TimelineStatus::Draft => true,
@@ -58,8 +57,9 @@ pub fn is_draft(ts: &TimelineStatus) -> bool {
 pub fn is_empty_review(ts: &TimelineStatus) -> bool {
     match ts {
         TimelineStatus::Review(review_status) => {
-            return !review_status.sponsor_requested_review && !review_status.reviewer_completed_attestation;
-        },
+            return !review_status.sponsor_requested_review
+                && !review_status.reviewer_completed_attestation;
+        }
         _ => false,
     }
 }

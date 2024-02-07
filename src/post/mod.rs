@@ -109,7 +109,10 @@ impl From<Post> for VersionedPost {
 #[schemars(crate = "near_sdk::schemars")]
 pub struct PostSnapshot {
     pub editor_id: AccountId,
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub timestamp: Timestamp,
     pub labels: HashSet<PostTag>,
     #[serde(flatten)]

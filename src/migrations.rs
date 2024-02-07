@@ -3,7 +3,7 @@
 //! latter is not asserted.
 
 use crate::*;
-use near_sdk::{env, near_bindgen, Promise, NearToken, borsh::to_vec};
+use near_sdk::{borsh::to_vec, env, near_bindgen, NearToken, Promise};
 use std::cmp::min;
 use std::collections::HashSet;
 

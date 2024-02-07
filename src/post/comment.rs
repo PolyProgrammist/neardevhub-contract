@@ -13,7 +13,10 @@ use std::collections::HashSet;
 #[schemars(crate = "near_sdk::schemars")]
 pub struct CommentV0 {
     pub author_id: AccountId,
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub timestamp: Timestamp,
     pub description: String,
     pub likes: HashSet<Like>,
@@ -27,7 +30,10 @@ pub struct CommentV0 {
 pub struct Comment {
     pub id: CommentId,
     pub author_id: AccountId,
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub timestamp: Timestamp,
     pub description: String,
     pub likes: HashSet<Like>,

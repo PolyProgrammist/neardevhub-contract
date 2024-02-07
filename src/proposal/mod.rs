@@ -11,10 +11,10 @@ use crate::str_serializers::*;
 use crate::{Balance, SponsorshipToken};
 
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
+use near_sdk::json_types::Base58CryptoHash;
 use near_sdk::schemars::JsonSchema;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{AccountId, BlockHeight, Timestamp};
-use near_sdk::json_types::Base58CryptoHash;
 
 pub type ProposalId = u64;
 
@@ -36,7 +36,10 @@ pub enum VersionedProposal {
 pub struct Proposal {
     pub id: ProposalId,
     pub author_id: AccountId,
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub social_db_post_block_height: BlockHeight,
     pub snapshot: ProposalSnapshot,
     // // Excludes the current snapshot itself.
@@ -47,7 +50,7 @@ impl From<VersionedProposal> for Proposal {
     fn from(vp: VersionedProposal) -> Self {
         match vp {
             VersionedProposal::V0(v0) => v0,
-        }    
+        }
     }
 }
 
@@ -63,7 +66,10 @@ impl From<Proposal> for VersionedProposal {
 #[schemars(crate = "near_sdk::schemars")]
 pub struct ProposalSnapshot {
     pub editor_id: AccountId,
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub timestamp: Timestamp,
     pub labels: HashSet<PostTag>,
     #[serde(flatten)]
@@ -76,8 +82,8 @@ pub struct ProposalSnapshot {
 #[borsh(crate = "near_sdk::borsh")]
 #[schemars(crate = "near_sdk::schemars")]
 pub enum ProposalLink {
-    ProposalId{id: ProposalId},
-    PostId{id: PostId}
+    ProposalId { id: ProposalId },
+    PostId { id: PostId },
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
@@ -90,7 +96,10 @@ pub struct ProposalBodyV0 {
     pub summary: String,
     pub description: String,
     pub linked_proposals: Vec<ProposalLink>,
-    #[serde(serialize_with = "u128_dec_format::serialize", deserialize_with = "u128_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u128_dec_format::serialize",
+        deserialize_with = "u128_dec_format::deserialize"
+    )]
     pub requested_sponsorship_amount: Balance,
     pub requested_sponsorship_token: SponsorshipToken,
     pub receiver_account: AccountId,
@@ -99,7 +108,6 @@ pub struct ProposalBodyV0 {
     pub payouts: Vec<Base58CryptoHash>,
     pub timeline: TimelineStatus,
 }
-
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
@@ -130,9 +138,10 @@ pub fn get_proposal_description(proposal_body: VersionedProposalBody) -> String 
 
 pub fn get_subscribers(proposal_body: &ProposalBodyV0) -> Vec<String> {
     let mut result = [
-        get_text_mentions(proposal_body.description.as_str()), 
-        get_text_mentions(proposal_body.summary.as_str())
-    ].concat();
+        get_text_mentions(proposal_body.description.as_str()),
+        get_text_mentions(proposal_body.summary.as_str()),
+    ]
+    .concat();
     if let Some(supervisor) = proposal_body.supervisor.clone() {
         result.push(supervisor.to_string());
     }

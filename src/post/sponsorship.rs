@@ -1,5 +1,5 @@
 use super::{Like, PostStatus};
-use crate::{str_serializers::*, CommentId, SolutionId, SponsorshipId, Balance};
+use crate::{str_serializers::*, Balance, CommentId, SolutionId, SponsorshipId};
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 use near_sdk::schemars::JsonSchema;
 use near_sdk::serde::{Deserialize, Serialize};
@@ -26,17 +26,26 @@ pub struct Sponsorship {
     pub name: String,
     pub description: String,
     pub author_id: AccountId,
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub timestamp: Timestamp,
     pub status: PostStatus,
     pub likes: HashSet<Like>,
     pub comments: Vec<CommentId>,
 
     // Specific fields
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub submission_id: SolutionId,
     pub sponsorship_token: SponsorshipToken,
-    #[serde(serialize_with = "u128_dec_format::serialize", deserialize_with = "u128_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u128_dec_format::serialize",
+        deserialize_with = "u128_dec_format::deserialize"
+    )]
     pub amount: Balance,
     pub supervisor: AccountId,
 }
@@ -49,7 +58,10 @@ pub struct SponsorshipV1 {
     pub name: String,
     pub description: String,
     pub sponsorship_token: SponsorshipToken,
-    #[serde(serialize_with = "u128_dec_format::serialize", deserialize_with = "u128_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u128_dec_format::serialize",
+        deserialize_with = "u128_dec_format::deserialize"
+    )]
     pub amount: Balance,
     pub supervisor: AccountId,
 }

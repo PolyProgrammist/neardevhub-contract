@@ -18,7 +18,7 @@ use std::collections::{HashMap, HashSet};
     Ord,
     Eq,
     Hash,
-    JsonSchema
+    JsonSchema,
 )]
 #[serde(crate = "near_sdk::serde")]
 #[serde(from = "String")]
@@ -54,7 +54,16 @@ impl Into<String> for Member {
 }
 
 #[derive(
-    BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, Default, Debug, Eq, PartialEq, JsonSchema
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    Clone,
+    Default,
+    Debug,
+    Eq,
+    PartialEq,
+    JsonSchema,
 )]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
@@ -91,7 +100,17 @@ pub enum ActionType {
     UseLabels,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
+#[derive(
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    Eq,
+    PartialEq,
+    JsonSchema,
+)]
 #[serde(crate = "near_sdk::serde")]
 #[serde(tag = "member_metadata_version")]
 #[borsh(crate = "near_sdk::borsh")]
@@ -115,7 +134,16 @@ impl From<MemberMetadata> for VersionedMemberMetadata {
 }
 
 #[derive(
-    BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, Debug, Eq, PartialEq, Default, JsonSchema
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    Eq,
+    PartialEq,
+    Default,
+    JsonSchema,
 )]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]

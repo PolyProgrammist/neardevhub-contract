@@ -12,7 +12,10 @@ use std::hash::{Hash, Hasher};
 #[schemars(crate = "near_sdk::schemars")]
 pub struct Like {
     pub author_id: AccountId,
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub timestamp: Timestamp,
 }
 

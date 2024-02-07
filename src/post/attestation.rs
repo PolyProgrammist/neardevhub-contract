@@ -17,14 +17,20 @@ pub struct Attestation {
     pub name: String,
     pub description: String,
     pub author_id: AccountId,
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub timestamp: Timestamp,
     pub status: PostStatus,
     pub likes: HashSet<Like>,
     pub comments: Vec<CommentId>,
 
     //Specific fields
-    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
+    #[serde(
+        serialize_with = "u64_dec_format::serialize",
+        deserialize_with = "u64_dec_format::deserialize"
+    )]
     pub submission_id: SolutionId,
 }
 

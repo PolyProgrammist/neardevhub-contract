@@ -4,7 +4,16 @@ use near_sdk::serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 #[derive(
-    BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, Debug, Eq, PartialEq, Default, JsonSchema
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    Eq,
+    PartialEq,
+    Default,
+    JsonSchema,
 )]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
@@ -14,7 +23,17 @@ pub struct RulesList {
     pub rules: HashMap<Rule, VersionedRuleMetadata>,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
+#[derive(
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    Eq,
+    PartialEq,
+    JsonSchema,
+)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
 #[schemars(crate = "near_sdk::schemars")]
@@ -22,7 +41,17 @@ pub struct RuleMetadata {
     pub description: String,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
+#[derive(
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    Eq,
+    PartialEq,
+    JsonSchema,
+)]
 #[serde(crate = "near_sdk::serde")]
 #[serde(tag = "rule_metadata_version")]
 #[borsh(crate = "near_sdk::borsh")]

@@ -1,5 +1,5 @@
-use near_sdk::{env, AccountId, Promise};
 use near_sdk::serde_json::json;
+use near_sdk::{env, AccountId, Promise};
 
 use crate::{get_proposal_description, social_db::social_db_contract, Proposal};
 

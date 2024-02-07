@@ -54,7 +54,9 @@ pub struct WikiPage {
     content_markdown: String,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, PartialEq, Debug, JsonSchema)]
+#[derive(
+    BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, PartialEq, Debug, JsonSchema,
+)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
 #[schemars(crate = "near_sdk::schemars")]
@@ -66,7 +68,9 @@ pub struct CommunityAddOn {
     pub parameters: String,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, PartialEq, Debug, JsonSchema)]
+#[derive(
+    BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, PartialEq, Debug, JsonSchema,
+)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
 #[schemars(crate = "near_sdk::schemars")]

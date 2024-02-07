@@ -20,10 +20,10 @@ use proposal::*;
 use timeline::{is_draft, is_empty_review};
 
 use crate::social_db::{social_db_contract, SetReturnType};
-use near_sdk::serde::{Serialize, Deserialize};
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, UnorderedMap, Vector};
 use near_sdk::require;
+use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::serde_json::{json, Value};
 use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault};
 
@@ -143,7 +143,9 @@ impl Contract {
 
     pub fn get_proposal(&self, proposal_id: ProposalId) -> VersionedProposal {
         near_sdk::log!("get_proposal");
-        self.proposals.get(proposal_id).unwrap_or_else(|| panic!("Proposal id {} not found", proposal_id))
+        self.proposals
+            .get(proposal_id)
+            .unwrap_or_else(|| panic!("Proposal id {} not found", proposal_id))
     }
 
     pub fn get_all_proposal_ids(&self) -> Vec<ProposalId> {
@@ -243,12 +245,12 @@ impl Contract {
             ),
             "Cannot use these labels"
         );
-        require!(proposal_body.payouts.len() == 0, "Can't add proposal with payouts at the beginning");
-
         require!(
-            self.proposal_categories.contains(&proposal_body.category),
-            "Unknown category"
+            proposal_body.payouts.len() == 0,
+            "Can't add proposal with payouts at the beginning"
         );
+
+        require!(self.proposal_categories.contains(&proposal_body.category), "Unknown category");
 
         require!(
             is_draft(&proposal_body.timeline),
@@ -261,7 +263,8 @@ impl Contract {
             self.label_to_proposals.insert(label, &other_proposals);
         }
 
-        let mut author_proposals = self.author_proposals.get(&author_id).unwrap_or_else(|| HashSet::new());
+        let mut author_proposals =
+            self.author_proposals.get(&author_id).unwrap_or_else(|| HashSet::new());
         author_proposals.insert(id);
         self.author_proposals.insert(&author_id, &author_proposals);
 
@@ -269,21 +272,31 @@ impl Contract {
             id,
             author_id: author_id.clone(),
             social_db_post_block_height: 0u64, // TODO
-            snapshot: ProposalSnapshot { editor_id, timestamp: env::block_timestamp(), labels, body: body.clone() },
+            snapshot: ProposalSnapshot {
+                editor_id,
+                timestamp: env::block_timestamp(),
+                labels,
+                body: body.clone(),
+            },
             snapshot_history: vec![],
         };
 
         proposal::repost::publish_to_socialdb_feed(
             Self::ext(env::current_account_id())
-            .with_static_gas(env::prepaid_gas().saturating_div(3))
-            .set_block_height_callback(proposal.clone()), proposal.clone());
+                .with_static_gas(env::prepaid_gas().saturating_div(3))
+                .set_block_height_callback(proposal.clone()),
+            proposal.clone(),
+        );
 
         notify::notify_proposal_subscribers(&proposal);
     }
 
-
     #[private]
-    pub fn set_block_height_callback(&mut self, #[allow(unused_mut)] mut proposal: Proposal, #[callback_unwrap] set_result: SetReturnType) -> BlockHeightCallbackRetValue {
+    pub fn set_block_height_callback(
+        &mut self,
+        #[allow(unused_mut)] mut proposal: Proposal,
+        #[callback_unwrap] set_result: SetReturnType,
+    ) -> BlockHeightCallbackRetValue {
         proposal.social_db_post_block_height = set_result.block_height.into();
         self.proposals.push(&proposal.clone().into());
         BlockHeightCallbackRetValue { proposal_id: near_sdk::json_types::U64(proposal.id) }
@@ -304,7 +317,10 @@ impl Contract {
 
     pub fn get_proposals_by_author(&self, author: AccountId) -> Vec<ProposalId> {
         near_sdk::log!("get_proposals_by_author");
-        self.author_proposals.get(&author).map(|proposals| proposals.into_iter().collect()).unwrap_or(Vec::new())
+        self.author_proposals
+            .get(&author)
+            .map(|proposals| proposals.into_iter().collect())
+            .unwrap_or(Vec::new())
     }
 
     pub fn get_proposals_by_label(&self, label: String) -> Vec<ProposalId> {
@@ -343,7 +359,11 @@ impl Contract {
         res
     }
 
-    pub fn is_allowed_to_edit_proposal(&self, proposal_id: ProposalId, editor: Option<AccountId>) -> bool {
+    pub fn is_allowed_to_edit_proposal(
+        &self,
+        proposal_id: ProposalId,
+        editor: Option<AccountId>,
+    ) -> bool {
         near_sdk::log!("is_allowed_to_edit_proposal");
         let proposal: Proposal = self
             .proposals
@@ -399,9 +419,16 @@ impl Contract {
             .contains(&ActionType::UseLabels)
     }
 
-    fn filtered_labels<T>(&self, labels_to_t: &UnorderedMap<String, T>, editor: &AccountId) -> Vec<String>
-    where T: near_sdk::borsh::BorshSerialize + near_sdk::borsh::BorshDeserialize, {
-        let filtered: HashSet<String> = labels_to_t.keys()
+    fn filtered_labels<T>(
+        &self,
+        labels_to_t: &UnorderedMap<String, T>,
+        editor: &AccountId,
+    ) -> Vec<String>
+    where
+        T: near_sdk::borsh::BorshSerialize + near_sdk::borsh::BorshDeserialize,
+    {
+        let filtered: HashSet<String> = labels_to_t
+            .keys()
             .filter(|label| {
                 self.is_allowed_to_use_labels(Some(editor.clone()), vec![label.clone()])
             })
@@ -521,7 +548,12 @@ impl Contract {
     }
 
     #[payable]
-    pub fn edit_proposal(&mut self, id: ProposalId, body: VersionedProposalBody, labels: HashSet<String>) { 
+    pub fn edit_proposal(
+        &mut self,
+        id: ProposalId,
+        body: VersionedProposalBody,
+        labels: HashSet<String>,
+    ) {
         near_sdk::log!("edit_proposal");
         require!(
             self.is_allowed_to_edit_proposal(id, Option::None),
@@ -534,19 +566,15 @@ impl Contract {
         let proposal_body = body.clone().latest_version();
 
         require!(
-            self.has_moderator(editor_id.clone()) || editor_id.clone() == env::current_account_id() || (
-                is_draft(&proposal.snapshot.body.clone().latest_version().timeline) && (
-                    is_empty_review(&proposal_body.timeline) || 
-                    is_draft(&proposal_body.timeline)
-                )
-            ),
+            self.has_moderator(editor_id.clone())
+                || editor_id.clone() == env::current_account_id()
+                || (is_draft(&proposal.snapshot.body.clone().latest_version().timeline)
+                    && (is_empty_review(&proposal_body.timeline)
+                        || is_draft(&proposal_body.timeline))),
             "This account is only allowed to change proposal status from DRAFT to REVIEW"
         );
 
-        require!(
-            self.proposal_categories.contains(&proposal_body.category),
-            "Unknown category"
-        );
+        require!(self.proposal_categories.contains(&proposal_body.category), "Unknown category");
 
         let old_snapshot = proposal.snapshot.clone();
         let old_labels_set = old_snapshot.labels.clone();
@@ -606,7 +634,7 @@ impl Contract {
     pub fn set_allowed_categories(&mut self, new_categories: Vec<String>) {
         let editor_id = env::predecessor_account_id();
         require!(
-            self.has_moderator(editor_id.clone()) || editor_id.clone() == env::current_account_id(), 
+            self.has_moderator(editor_id.clone()) || editor_id.clone() == env::current_account_id(),
             "Only the admin and moderators can set categories"
         );
         self.proposal_categories = new_categories;
@@ -845,15 +873,15 @@ impl Contract {
 #[serde(crate = "near_sdk::serde")]
 #[schemars(crate = "near_sdk::schemars")]
 pub struct BlockHeightCallbackRetValue {
-    proposal_id: near_sdk::json_types::U64,    
+    proposal_id: near_sdk::json_types::U64,
 }
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
-    use std::collections::{HashSet};
+    use std::collections::HashSet;
     use std::convert::TryInto;
 
-    use crate::community::{AddOn};
+    use crate::community::AddOn;
     use crate::{PostBody, ProposalBodyV0, VersionedProposalBody};
     use near_sdk::test_utils::{get_created_receipts, VMContextBuilder};
     use near_sdk::{testing_env, VMContext};
@@ -912,7 +940,9 @@ mod tests {
         let receipts = get_created_receipts();
         assert_eq!(3, receipts.len());
 
-        if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, .. } = &receipts[2].actions[0] {
+        if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, .. } =
+            &receipts[2].actions[0]
+        {
             assert_eq!(method_name, b"set");
             assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"frol.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"neardevdao.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}}]\"}}}}");
         } else {
@@ -938,7 +968,9 @@ mod tests {
         assert_eq!(2, receipts.len());
 
         // Extract the method_name and args values
-        if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, .. } = &receipts[1].actions[0] {
+        if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, .. } =
+            &receipts[1].actions[0]
+        {
             assert_eq!(method_name, b"set");
             assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":0}}]\"}}}}");
         } else {

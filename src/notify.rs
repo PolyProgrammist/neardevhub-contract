@@ -60,19 +60,25 @@ pub fn notify_accounts(accounts: Vec<String>, notify_value: serde_json::Value) {
 pub fn notify_proposal_subscribers(proposal: &Proposal) {
     let accounts = get_subscribers(&proposal.snapshot.body.clone().latest_version());
 
-    notify_accounts(accounts, json!({
-        "type": "devgovgigs/mention",
-        "proposal": proposal.id,
-    }))
+    notify_accounts(
+        accounts,
+        json!({
+            "type": "devgovgigs/mention",
+            "proposal": proposal.id,
+        }),
+    )
 }
 
 pub fn notify_mentions(text: &str, post_id: PostId) {
     let mentions = get_text_mentions(text);
 
-    notify_accounts(mentions, json!({
-        "type": "devgovgigs/mention",
-        "post": post_id,
-    }))
+    notify_accounts(
+        mentions,
+        json!({
+            "type": "devgovgigs/mention",
+            "post": post_id,
+        }),
+    )
 }
 
 pub fn notify_like(post_id: PostId, post_author: AccountId) -> Promise {
@@ -88,10 +94,13 @@ pub fn notify_edit(post_id: PostId, post_author: AccountId) -> Promise {
 }
 
 pub fn notify_edit_proposal(proposal_id: ProposalId, post_author: AccountId) -> Promise {
-    notify(post_author, json!({
-        "type": format!("devgovgigs/{}", "edit"),
-        "proposal": proposal_id,
-    }))
+    notify(
+        post_author,
+        json!({
+            "type": format!("devgovgigs/{}", "edit"),
+            "proposal": proposal_id,
+        }),
+    )
 }
 
 fn notify_value(post_id: PostId, action: &str) -> serde_json::Value {
@@ -140,7 +149,9 @@ mod tests {
         let receipts = get_created_receipts();
         assert_eq!(1, receipts.len());
 
-        if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, .. } = &receipts[0].actions[0] {
+        if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, .. } =
+            &receipts[0].actions[0]
+        {
             assert_eq!(method_name, b"set");
             assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"a.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":2}},{\\\"key\\\":\\\"bcdefg.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"post\\\":2}}]\"}}}}");
         } else {

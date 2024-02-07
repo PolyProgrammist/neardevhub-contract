@@ -1,7 +1,7 @@
 use near_sdk::schemars::JsonSchema;
-use near_sdk::{ext_contract, AccountId, env};
+use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::serde_json::Value;
-use near_sdk::serde::{Serialize, Deserialize};
+use near_sdk::{env, ext_contract, AccountId};
 
 #[derive(Copy, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]

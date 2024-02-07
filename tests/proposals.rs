@@ -1,6 +1,6 @@
 mod test_env;
 
-use near_sdk::{NearToken};
+use near_sdk::NearToken;
 use serde_json::Value;
 use {crate::test_env::*, serde_json::json};
 
@@ -48,7 +48,8 @@ async fn test_proposal() -> anyhow::Result<()> {
 
     assert_eq!(get_proposal["snapshot"]["category"], "Marketing");
 
-    let social_db_post_block_height: u64 = get_proposal["social_db_post_block_height"].as_str().unwrap().parse::<u64>()?;
+    let social_db_post_block_height: u64 =
+        get_proposal["social_db_post_block_height"].as_str().unwrap().parse::<u64>()?;
     assert!(social_db_post_block_height > 0);
 
     let _edit_proposal_category = contract
@@ -113,36 +114,30 @@ async fn test_proposal() -> anyhow::Result<()> {
         .transact()
         .await?;
 
-    let get_proposals = contract
-        .call("get_proposals")
-        .args_json(json!({}))
-        .view()
-        .await?
-        .json::<Value>()?;
+    let get_proposals =
+        contract.call("get_proposals").args_json(json!({})).view().await?.json::<Value>()?;
 
     let proposals_array = get_proposals.as_array().unwrap();
 
     assert_eq!(proposals_array.len(), 2);
     assert_eq!(proposals_array.get(1).unwrap()["snapshot"]["name"], "One more");
 
-    let get_proposal_ids = contract
-        .call("get_all_proposal_ids")
-        .args_json(json!({}))
-        .view()
-        .await?
-        .json::<Value>()?;
+    let get_proposal_ids =
+        contract.call("get_all_proposal_ids").args_json(json!({})).view().await?.json::<Value>()?;
 
     let proposal_ids = get_proposal_ids
         .as_array()
         .unwrap()
         .iter()
-        .map(|x| x.clone().as_u64().unwrap()).collect::<Vec<_>>();
+        .map(|x| x.clone().as_u64().unwrap())
+        .collect::<Vec<_>>();
 
     let expected_ids: Vec<u64> = [0u64, 1u64].to_vec();
 
     assert_eq!(proposal_ids, expected_ids);
-    
-    let second_account = worker.root_account()?
+
+    let second_account = worker
+        .root_account()?
         .create_subaccount("second")
         .initial_balance(NearToken::from_near(20))
         .transact()
@@ -210,7 +205,8 @@ async fn test_proposal() -> anyhow::Result<()> {
         .as_array()
         .unwrap()
         .iter()
-        .map(|x| x.as_u64().unwrap()).collect::<Vec<_>>();
+        .map(|x| x.as_u64().unwrap())
+        .collect::<Vec<_>>();
 
     let expected_ids: Vec<u64> = [0u64, 2u64].to_vec();
     assert_eq!(proposal_ids_by_label, expected_ids);
@@ -226,7 +222,8 @@ async fn test_proposal() -> anyhow::Result<()> {
         .as_array()
         .unwrap()
         .iter()
-        .map(|x| x.as_str().unwrap()).collect::<Vec<_>>();
+        .map(|x| x.as_str().unwrap())
+        .collect::<Vec<_>>();
 
     let expected_labels: Vec<&str> = ["test1", "test2", "test3"].to_vec();
     assert_eq!(proposal_labels, expected_labels);
@@ -242,7 +239,8 @@ async fn test_proposal() -> anyhow::Result<()> {
         .as_array()
         .unwrap()
         .iter()
-        .map(|x| x.as_str().unwrap()).collect::<Vec<_>>();
+        .map(|x| x.as_str().unwrap())
+        .collect::<Vec<_>>();
 
     let expected_authors: Vec<&str> = ["devhub.near", "second.test.near"].to_vec();
     assert_eq!(proposal_authors, expected_authors);
@@ -284,7 +282,8 @@ async fn test_proposal() -> anyhow::Result<()> {
         .as_array()
         .unwrap()
         .iter()
-        .map(|x| x.as_str().unwrap()).collect::<Vec<_>>();
+        .map(|x| x.as_str().unwrap())
+        .collect::<Vec<_>>();
 
     let expected_labels: Vec<&str> = ["test1", "test2", "test3"].to_vec();
     assert_eq!(allowed_proposal_labels, expected_labels);
@@ -340,7 +339,6 @@ async fn test_proposal() -> anyhow::Result<()> {
         .await?;
 
     assert!(!add_proposal_incorrect_payout.is_success());
-
 
     let edit_proposal_incorrect_timeline_status = second_account.call(contract.id(), "edit_proposal")
         .args_json(json!({
@@ -414,18 +412,15 @@ async fn test_proposal() -> anyhow::Result<()> {
         .transact()
         .await?;
 
-    let get_categories: serde_json::Value = contract
-        .call("get_allowed_categories")
-        .args_json(json!({}))
-        .view()
-        .await?
-        .json()?;
+    let get_categories: serde_json::Value =
+        contract.call("get_allowed_categories").args_json(json!({})).view().await?.json()?;
 
     let categories: Vec<String> = get_categories
         .as_array()
         .unwrap()
         .iter()
-        .map(|x| String::from(x.clone().as_str().unwrap())).collect::<Vec<_>>();
+        .map(|x| String::from(x.clone().as_str().unwrap()))
+        .collect::<Vec<_>>();
 
     assert_eq!(categories, vec!["Two", "Three"]);
 
