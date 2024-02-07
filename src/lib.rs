@@ -14,6 +14,7 @@ use crate::access_control::members::ActionType;
 use crate::access_control::members::Member;
 use crate::access_control::AccessControl;
 use community::*;
+use near_sdk::schemars::JsonSchema;
 use post::*;
 use proposal::*;
 use timeline::{is_draft, is_empty_review};
@@ -840,8 +841,9 @@ impl Contract {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
+#[derive(Copy, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
+#[schemars(crate = "near_sdk::schemars")]
 pub struct BlockHeightCallbackRetValue {
     proposal_id: near_sdk::json_types::U64,    
 }
@@ -902,7 +904,7 @@ mod tests {
             "requested_sponsorship_token": "USD",
             "receiver_account": "polyprogrammist.near",
             "supervisor": "frol.near",
-            "sponsor": "neardevdao.near",
+            "requested_sponsor": "neardevdao.near",
             "payouts": [],
             "timeline": {"status": "DRAFT"}
         })).unwrap();
@@ -912,7 +914,7 @@ mod tests {
 
         if let near_sdk::mock::MockAction::FunctionCallWeight { method_name, args, .. } = &receipts[2].actions[0] {
             assert_eq!(method_name, b"set");
-            assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"frol.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}}]\"}}}}");
+            assert_eq!(args, b"{\"data\":{\"bob.near\":{\"index\":{\"notify\":\"[{\\\"key\\\":\\\"petersalomonsen.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"psalomo.near.\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"frol.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}},{\\\"key\\\":\\\"neardevdao.near\\\",\\\"value\\\":{\\\"type\\\":\\\"devgovgigs/mention\\\",\\\"proposal\\\":0}}]\"}}}}");
         } else {
             assert!(false, "Expected a function call ...")
         }

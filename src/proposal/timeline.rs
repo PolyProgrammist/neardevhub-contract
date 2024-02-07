@@ -1,9 +1,11 @@
 use near_sdk::borsh::{BorshSerialize, BorshDeserialize};
+use near_sdk::schemars::JsonSchema;
 use near_sdk::serde::{Serialize, Deserialize};
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde", tag = "status", rename_all = "SCREAMING_SNAKE_CASE")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub enum TimelineStatus {
     Draft,
     Review(ReviewStatus),
@@ -14,17 +16,19 @@ pub enum TimelineStatus {
     Funded(FundedStatus),
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub struct ReviewStatus {
     sponsor_requested_review: bool,
     reviewer_completed_attestation: bool
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub struct PaymentProcessingStatus {
     #[serde(flatten)]
     review_status: ReviewStatus,
@@ -33,9 +37,10 @@ pub struct PaymentProcessingStatus {
     request_for_trustees_created: bool,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub struct FundedStatus {
     #[serde(flatten)]
     payment_processing_status: PaymentProcessingStatus,

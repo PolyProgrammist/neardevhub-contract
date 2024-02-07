@@ -1,9 +1,11 @@
+use near_sdk::schemars::JsonSchema;
 use near_sdk::{ext_contract, AccountId, env};
 use near_sdk::serde_json::Value;
 use near_sdk::serde::{Serialize, Deserialize};
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
+#[derive(Copy, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
+#[schemars(crate = "near_sdk::schemars")]
 pub struct SetReturnType {
     pub block_height: near_sdk::json_types::U64,
 }

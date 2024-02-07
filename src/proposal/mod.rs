@@ -11,6 +11,7 @@ use crate::str_serializers::*;
 use crate::{Balance, SponsorshipToken};
 
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
+use near_sdk::schemars::JsonSchema;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{AccountId, BlockHeight, Timestamp};
 use near_sdk::json_types::Base58CryptoHash;
@@ -19,21 +20,23 @@ pub type ProposalId = u64;
 
 type PostTag = String;
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 #[serde(tag = "proposal_version")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub enum VersionedProposal {
     V0(Proposal),
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub struct Proposal {
     pub id: ProposalId,
     pub author_id: AccountId,
-    #[serde(with = "u64_dec_format")]
+    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
     pub social_db_post_block_height: BlockHeight,
     pub snapshot: ProposalSnapshot,
     // // Excludes the current snapshot itself.
@@ -54,51 +57,55 @@ impl From<Proposal> for VersionedProposal {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub struct ProposalSnapshot {
     pub editor_id: AccountId,
-    #[serde(with = "u64_dec_format")]
+    #[serde(serialize_with = "u64_dec_format::serialize", deserialize_with = "u64_dec_format::deserialize")]
     pub timestamp: Timestamp,
     pub labels: HashSet<PostTag>,
     #[serde(flatten)]
     pub body: VersionedProposalBody,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 #[serde(tag = "link_type")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub enum ProposalLink {
     ProposalId{id: ProposalId},
     PostId{id: PostId}
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub struct ProposalBodyV0 {
     pub name: String,
     pub category: String,
     pub summary: String,
     pub description: String,
     pub linked_proposals: Vec<ProposalLink>,
-    #[serde(with = "u128_dec_format")]
+    #[serde(serialize_with = "u128_dec_format::serialize", deserialize_with = "u128_dec_format::deserialize")]
     pub requested_sponsorship_amount: Balance,
-    pub requested_sponsorship_token: Option<SponsorshipToken>,
+    pub requested_sponsorship_token: SponsorshipToken,
     pub receiver_account: AccountId,
-    pub requested_sponsor: Option<AccountId>,
+    pub requested_sponsor: AccountId,
     pub supervisor: Option<AccountId>,
     pub payouts: Vec<Base58CryptoHash>,
     pub timeline: TimelineStatus,
 }
 
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 #[serde(tag = "proposal_body_version")]
 #[borsh(crate = "near_sdk::borsh")]
+#[schemars(crate = "near_sdk::schemars")]
 pub enum VersionedProposalBody {
     V0(ProposalBodyV0),
 }
@@ -129,9 +136,7 @@ pub fn get_subscribers(proposal_body: &ProposalBodyV0) -> Vec<String> {
     if let Some(supervisor) = proposal_body.supervisor.clone() {
         result.push(supervisor.to_string());
     }
-    if let Some(sponsor) = proposal_body.requested_sponsor.clone() {
-        result.push(sponsor.to_string());
-    }
+    result.push(proposal_body.requested_sponsor.to_string());
     result
 }
 

@@ -26,7 +26,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_token": "USD",
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
-                "sponsor": "neardevdao.near",
+                "requested_sponsor": "neardevdao.near",
                 "payouts": [ ],
                 "timeline": {"status": "DRAFT"}
             },
@@ -66,7 +66,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_token": "USD",
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
-                "sponsor": "neardevdao.near",
+                "requested_sponsor": "neardevdao.near",
                 "payouts": [],
                 "timeline": {"status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
             },
@@ -102,7 +102,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_token": "NEAR",
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
-                "sponsor": "neardevdao.near",
+                "requested_sponsor": "neardevdao.near",
                 "payouts": [],
                 "timeline": {"status": "DRAFT"}
             },
@@ -162,7 +162,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_token": "USD",
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
-                "sponsor": "neardevdao.near",
+                "requested_sponsor": "neardevdao.near",
                 "payouts": [],
                 "timeline": {"status": "DRAFT"}
             },
@@ -302,6 +302,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_amount": "1000000000",
                 "requested_sponsorship_token": "USD",
                 "receiver_account": "polyprogrammist.near",
+                "requested_sponsor": "neardevdao.near",
                 "payouts": [],
                 "timeline": {"status": "REVIEW", "sponsor_requested_review": false, "reviewer_completed_attestation": false }
             },
@@ -327,7 +328,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_token": "USD",
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
-                "sponsor": "neardevdao.near",
+                "requested_sponsor": "neardevdao.near",
                 "payouts": [ "2cXzSP1Z9AM8A7mg18voh9c4sBmiUzxzyDXiYW5fiZd6" ],
                 "timeline": {"status": "DRAFT"}
             },
@@ -355,7 +356,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_token": "USD",
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
-                "sponsor": "neardevdao.near",
+                "requested_sponsor": "neardevdao.near",
                 "payouts": [],
                 "timeline": {"status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
             },
@@ -382,7 +383,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_token": "USD",
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
-                "sponsor": "neardevdao.near",
+                "requested_sponsor": "neardevdao.near",
                 "payouts": [ "5PHaiXRvtZTYVSEBN5prT6M1odceCPxKzgpTZDmqrZsC" ],
                 "timeline": {"status": "REVIEW", "sponsor_requested_review": false, "reviewer_completed_attestation": false }
             },
@@ -443,7 +444,7 @@ async fn test_proposal() -> anyhow::Result<()> {
                 "requested_sponsorship_token": "USD",
                 "receiver_account": "polyprogrammist.near",
                 "supervisor": "frol.near",
-                "sponsor": "neardevdao.near",
+                "requested_sponsor": "neardevdao.near",
                 "payouts": [],
                 "timeline": {"status": "REVIEW", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
             },
@@ -455,6 +456,146 @@ async fn test_proposal() -> anyhow::Result<()> {
         .await?;
 
     assert!(edit_proposal_incorrect_category.is_failure());
+
+    let _edit_proposal_timeline_approved = contract
+        .call("edit_proposal")
+        .args_json(json!({
+            "id": 0,
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "Three",
+                "summary": "sum",
+                "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "supervisor": "frol.near",
+                "requested_sponsor": "neardevdao.near",
+                "payouts": [],
+                "timeline": {"status": "APPROVED", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+
+    assert!(_edit_proposal_timeline_approved.is_success());
+
+    let _edit_proposal_timeline_rejected = contract
+        .call("edit_proposal")
+        .args_json(json!({
+            "id": 0,
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "Three",
+                "summary": "sum",
+                "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "supervisor": "frol.near",
+                "requested_sponsor": "neardevdao.near",
+                "payouts": [],
+                "timeline": {"status": "REJECTED", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+
+    assert!(_edit_proposal_timeline_rejected.is_success());
+
+    let _edit_proposal_timeline_conditionally = contract
+        .call("edit_proposal")
+        .args_json(json!({
+            "id": 0,
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "Three",
+                "summary": "sum",
+                "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "supervisor": "frol.near",
+                "requested_sponsor": "neardevdao.near",
+                "payouts": [],
+                "timeline": {"status": "APPROVED_CONDITIONALLY", "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+
+    assert!(_edit_proposal_timeline_conditionally.is_success());
+
+    let _edit_proposal_timeline_payment = contract
+        .call("edit_proposal")
+        .args_json(json!({
+            "id": 0,
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "Three",
+                "summary": "sum",
+                "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "supervisor": "frol.near",
+                "requested_sponsor": "neardevdao.near",
+                "payouts": [],
+                "timeline": {"status": "PAYMENT_PROCESSING", "kyc_verified": false, "test_transaction_sent": false, "request_for_trustees_created": false, "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+
+    assert!(_edit_proposal_timeline_payment.is_success());
+
+    let _edit_proposal_timeline_funded = contract
+        .call("edit_proposal")
+        .args_json(json!({
+            "id": 0,
+            "body": {
+                "proposal_body_version": "V0",
+                "name": "another post",
+                "description": "some description",
+                "category": "Three",
+                "summary": "sum",
+                "linked_proposals": [{"link_type": "PostId", "id": 1}, {"link_type": "PostId", "id": 3}],
+                "requested_sponsorship_amount": "1000000000",
+                "requested_sponsorship_token": "USD",
+                "receiver_account": "polyprogrammist.near",
+                "supervisor": "frol.near",
+                "requested_sponsor": "neardevdao.near",
+                "payouts": [],
+                "timeline": {"status": "FUNDED", "trustees_released_payment": false, "kyc_verified": false, "test_transaction_sent": false, "request_for_trustees_created": false, "sponsor_requested_review": true, "reviewer_completed_attestation": false }
+            },
+            "labels": ["test1", "test2"],
+        }))
+        .max_gas()
+        .deposit(deposit_amount)
+        .transact()
+        .await?;
+
+    assert!(_edit_proposal_timeline_funded.is_success());
 
     Ok(())
 }
