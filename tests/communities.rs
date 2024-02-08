@@ -1,7 +1,6 @@
 mod test_env;
 
 use near_sdk::NearToken;
-use near_workspaces::AccountId;
 use {crate::test_env::*, serde_json::json};
 
 #[tokio::test]
@@ -13,7 +12,7 @@ async fn test_community_addon() -> anyhow::Result<()> {
     let deposit_amount = NearToken::from_near(2);
 
     // Add a community
-    let create_community = contract
+    let _create_community = contract
         .call("create_community")
         .args_json(json!({
             "inputs": {
@@ -32,7 +31,7 @@ async fn test_community_addon() -> anyhow::Result<()> {
         .await?;
 
     // Create add-on
-    contract
+    let _ = contract
         .call("create_addon")
         .args_json(json!({"addon": {
             "id": "CommunityAddOnId",
@@ -46,7 +45,7 @@ async fn test_community_addon() -> anyhow::Result<()> {
         .transact()
         .await?;
 
-    contract
+    let _ = contract
         .call("set_community_addons")
         .args_json(json!({
             "handle": "gotham",
@@ -85,7 +84,7 @@ async fn test_update_community() -> anyhow::Result<()> {
     let deposit_amount = NearToken::from_near(2);
 
     // Add a community
-    let create_community = contract
+    let _create_community = contract
         .call("create_community")
         .args_json(json!({
             "inputs": {
@@ -103,7 +102,7 @@ async fn test_update_community() -> anyhow::Result<()> {
         .transact()
         .await?;
 
-    let update_community = contract
+    let _update_community = contract
         .call("update_community")
         .args_json(json!({
             "handle": "gotham",
@@ -147,7 +146,7 @@ async fn test_announcement() -> anyhow::Result<()> {
     let deposit_amount = NearToken::from_near(2);
 
     // Add a community
-    let create_community = contract
+    let _create_community = contract
         .call("create_community")
         .args_json(json!({
             "inputs": {
@@ -203,7 +202,7 @@ async fn test_announcement() -> anyhow::Result<()> {
     );
 
     // update community, intend to change name and logo
-    let update_community = contract
+    let _update_community = contract
     .call("update_community")
     .args_json(json!({
         "handle": "gotham",
