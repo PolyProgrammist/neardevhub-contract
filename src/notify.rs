@@ -44,18 +44,18 @@ pub fn notify_mentions(text: &str, post_id: PostId) {
             }));
         }
 
-        ext_social_db::set(
-            json!({
-                env::predecessor_account_id() : {
-                    "index": {
-                        "notify": json!(notify_values).to_string()
-                    }
-                }
-            }),
-            &SOCIAL_DB,
-            env::attached_deposit(),
-            env::prepaid_gas() / 4,
-        );
+        // ext_social_db::set(
+        //     json!({
+        //         env::predecessor_account_id() : {
+        //             "index": {
+        //                 "notify": json!(notify_values).to_string()
+        //             }
+        //         }
+        //     }),
+        //     &SOCIAL_DB,
+        //     env::attached_deposit(),
+        //     env::prepaid_gas() / 4,
+        // );
     }
 }
 
@@ -72,24 +72,25 @@ pub fn notify_edit(post_id: PostId, post_author: AccountId) -> Promise {
 }
 
 fn notify(post_id: PostId, post_author: AccountId, action: &str) -> Promise {
-    ext_social_db::set(
-        json!({
-            env::predecessor_account_id() : {
-                "index": {
-                    "notify": json!({
-                        "key": post_author,
-                        "value": {
-                            "type": format!("devgovgigs/{}", action),
-                            "post": post_id,
-                        },
-                    }).to_string()
-                }
-            }
-        }),
-        &SOCIAL_DB,
-        env::attached_deposit(),
-        env::prepaid_gas() / 4,
-    )
+    Promise::new(env::predecessor_account_id())
+    // ext_social_db::set(
+    //     json!({
+    //         env::predecessor_account_id() : {
+    //             "index": {
+    //                 "notify": json!({
+    //                     "key": post_author,
+    //                     "value": {
+    //                         "type": format!("devgovgigs/{}", action),
+    //                         "post": post_id,
+    //                     },
+    //                 }).to_string()
+    //             }
+    //         }
+    //     }),
+    //     &SOCIAL_DB,
+    //     env::attached_deposit(),
+    //     env::prepaid_gas() / 4,
+    // )
 }
 
 #[cfg(all(test, not(target_arch = "wasm32")))]

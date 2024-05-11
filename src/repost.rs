@@ -48,12 +48,13 @@ fn repost_internal(post: Post, contract_address: AccountId) -> near_sdk::serde_j
 }
 
 pub fn repost(post: Post) -> Promise {
-    ext_social_db::set(
-        repost_internal(post, env::current_account_id()),
-        &SOCIAL_DB,
-        env::attached_deposit(),
-        env::prepaid_gas() / 3,
-    )
+    Promise::new(env::current_account_id())
+    // ext_social_db::set(
+    //     repost_internal(post, env::current_account_id()),
+    //     &SOCIAL_DB,
+    //     env::attached_deposit(),
+    //     env::prepaid_gas() / 3,
+    // )
 }
 
 #[cfg(test)]
